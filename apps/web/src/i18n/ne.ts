@@ -2,7 +2,7 @@
 const ne = {
   app: { title: 'लेखा प्रणाली', tagline: 'सरकारी नगद आधारित लेखा प्रणाली' },
   nav: {
-    home: 'गृहपृष्ठ', INTERNAL: 'आन्तरिक', GRANT: 'अनुदान', CAPITAL: 'पूँजीगत खर्च', RECURRENT: 'चालु खर्च',
+    home: 'गृहपृष्ठ', INTERNAL: 'आन्तरिक', GRANT: 'अनुदान', CAPITAL: 'पूँजीगत खर्च', RECURRENT: 'चालु खर्च', INCOME: 'आम्दानी',
     dashboard: 'ड्यासबोर्ड', voucherEntry: 'भौचर प्रविष्टि', voucherList: 'भौचर सूची', cashBook: 'बैंक नगदी किताब', budgetLedger: 'बजेट खाता',
     advance: 'पेस्की', tax: 'कर (TDS)', budgetStatement: 'हिसाब विवरण', reports: 'प्रतिवेदन', admin: 'सेटिङ', audit: 'लेखाजोखा अभिलेख (Audit)',
     consolidated: 'सबै कोष (एकीकृत)', logout: 'बाहिर निस्कनुहोस्',
@@ -22,7 +22,14 @@ const ne = {
   role: { SUPER_ADMIN: 'प्रमुख (सुपर एडमिन)', ACCOUNTANT: 'लेखा', AUDITOR: 'लेखापरीक्षक' },
   status: { DRAFT: 'मस्यौदा', SUBMITTED: 'पेस भएको', APPROVED: 'स्वीकृत', CANCELLED: 'रद्द', REJECTED: 'फिर्ता', PAID: 'भुक्तानी भएको' },
   vtype: { NORMAL: 'साधारण', ADJUSTMENT: 'समायोजन', REVERSAL: 'फिर्ता समायोजन' },
-  vmode: { PAYMENT: 'भुक्तानी', TAX_DEPOSIT: 'कर जम्मा', MANUAL: 'डेबिट/क्रेडिट' },
+  vmode: { PAYMENT: 'भुक्तानी', TAX_DEPOSIT: 'कर जम्मा', MANUAL: 'डेबिट/क्रेडिट', RECEIPT: 'आम्दानी' },
+  income: {
+    desc: { INTERNAL: 'टिकट, भाडा, दान/भेटी, ब्याज', GRANT: 'संघ, प्रदेश, स्थानीय तह, अन्य निकाय' }, chooseKind: 'खर्च वा आम्दानी छान्नुहोस्', received: 'प्राप्त (स्वीकृत)', pending: 'स्वीकृतिको प्रतीक्षामा',
+    new: 'नयाँ आम्दानी प्रविष्टि', head: 'आम्दानी शीर्षक', chooseHead: 'आम्दानी शीर्षक छान्नुहोस्...', bySource: 'स्रोत अनुसार आम्दानी', code: 'राजस्व शीर्षक नं.',
+    receivedFrom: 'रकम बुझाउने व्यक्ति/निकाय', receiptNo: 'रसिद नं.', depositTo: 'रकम जम्मा भएको', BANK: 'बैंक खाता', CASH: 'नगद', fund: 'कोष', fundHint: 'यो रकम कुन कोषमा प्रयोग हुने हो',
+    list: 'आम्दानी भौचरहरू', total: 'कुल आम्दानी', saved: 'आम्दानी भौचर स्वीकृतिका लागि पेस भयो। प्रमुखले स्वीकृत गरेपछि बैंक नगदी किताबमा चढ्छ।',
+    noHeads: 'यो स्रोतको आम्दानी शीर्षक छैन — सेटिङ › खाता/शीर्षकमा थप्नुहोस्।', narration: '{{head}} बापत प्राप्त रकम', verifyCodes: 'आम्दानी शीर्षकका राजस्व संकेत नं. अस्थायी छन् — कार्यालयको किताबसँग भिडाएर सच्याउनुहोस्।',
+  },
   side: { DR: 'डे.', CR: 'क्रे.' },
   home: {
     welcome: 'नमस्कार', chooseSource: 'कोष छान्नुहोस्', chooseNature: 'खर्चको प्रकार छान्नुहोस्', budget: 'बजेट', spentPct: 'खर्च प्रतिशत', bank: 'बैंक मौज्दात',
@@ -60,12 +67,12 @@ const ne = {
     entryType: 'बजेटको प्रकार', APPROPRIATION: 'विनियोजन', ADDITIONAL: 'थप बजेट', REDUCTION: 'बजेट कटौती', TRANSFER: 'रकमान्तर', toHead: 'रकमान्तर गरिने शीर्षक', note: 'टिप्पणी/निर्णय',
     fund: 'कोष', newUser: 'नयाँ प्रयोगकर्ता', post: 'पद', role: 'भूमिका', active: 'सक्रिय', unlock: 'खोल्नुहोस्', resetPassword: 'नयाँ पासवर्ड', rate: 'दर (%)', effectiveFrom: 'लागू मिति',
     newRate: 'नयाँ दर थप्नुहोस्', lockMonth: 'महिना बन्द', locked: 'बन्द', open: 'खुला', startNumber: 'सुरु गो.भौ.नं.', startNumberHelp: 'कागजी किताबबाट सर्दा एकपटक मात्र राख्न मिल्छ।',
-    kind: 'प्रकार', nature: 'प्रकृति', rounding: 'TDS राउन्डिङ', UP_RUPEE: 'माथिल्लो पूरा रुपैयाँमा', NEAREST_RUPEE: 'नजिकको रुपैयाँ', DOWN_RUPEE: 'तल्लो रुपैयाँ', PAISA: 'पैसासम्म',
+    kind: 'प्रकार', nature: 'प्रकृति', source: 'स्रोत (आन्तरिक/अनुदान)', rounding: 'TDS राउन्डिङ', UP_RUPEE: 'माथिल्लो पूरा रुपैयाँमा', NEAREST_RUPEE: 'नजिकको रुपैयाँ', DOWN_RUPEE: 'तल्लो रुपैयाँ', PAISA: 'पैसासम्म',
     verifyCodes: 'खर्च शीर्षकका आर्थिक संकेत नं. अस्थायी छन् — कार्यालयको बजेट किताबसँग भिडाएर सच्याउनुहोस्।', verifyTax: 'कर दरहरू प्रयोगमा ल्याउनु अघि चार्टर्ड एकाउन्टेन्टबाट प्रमाणित गराउनुहोस्।',
   },
   audit: { when: 'समय', who: 'प्रयोगकर्ता', action: 'कार्य', entity: 'विषय', chainOk: 'अभिलेख शृङ्खला सुरक्षित छ — कुनै छेडछाड छैन', chainBroken: 'चेतावनी: अभिलेख #{{id}} मा छेडछाड देखियो', verify: 'जाँच गर्नुहोस्' },
   chart: {
-    fundTitle: 'रकम प्रवाह', allTitle: 'कोष अनुसार खर्च', expense: 'बजेट खर्च', paid: 'बैंक भुक्तानी', tds: 'कर कट्टी (TDS)',
+    fundTitle: 'रकम प्रवाह', allTitle: 'कोष अनुसार खर्च', expense: 'बजेट खर्च', paid: 'बैंक भुक्तानी', tds: 'कर कट्टी (TDS)', income: 'आम्दानी',
     byMonth: 'आ.व. — मासिक', cumulative: 'संचित खर्च बनाम विनियोजन', weekly: 'महिना — साप्ताहिक', week: 'हप्ता', period: 'अवधि',
     tableView: 'तालिकामा हेर्नुहोस्', chartView: 'ग्राफमा हेर्नुहोस्', noSpend: 'यो अवधिमा स्वीकृत खर्च छैन',
   },
@@ -157,6 +164,12 @@ const ne = {
     OPENING_AFTER_APPROVAL: 'भौचर स्वीकृत भइसकेपछि सुरु मौज्दात परिवर्तन गर्न मिल्दैन।',
     USERNAME_EXISTS: 'यो प्रयोगकर्ता नाम पहिल्यै छ।',
     CANNOT_DEMOTE_SELF: 'आफ्नै खाता निष्क्रिय वा भूमिका घटाउन मिल्दैन।',
+    RECEIPT_REQUIRED: 'आम्दानीको विवरण भर्नुहोस्।',
+    INCOME_HEAD_REQUIRED: 'आम्दानी शीर्षक छान्नुहोस्।',
+    INCOME_SOURCE_MISMATCH: '"{{account}}" यो स्रोतको आम्दानी शीर्षक होइन (आन्तरिक/अनुदान मिलेन)।',
+    INCOME_SOURCE_REQUIRED: 'आम्दानी शीर्षक आन्तरिक हो वा अनुदान, छान्नुहोस्।',
+    RECEIVED_FROM_REQUIRED: 'रकम बुझाउने व्यक्ति/निकायको नाम अनिवार्य छ।',
+    CASH_ACCOUNT_MISSING: 'नगद खाता भेटिएन।',
   },
 };
 export default ne;

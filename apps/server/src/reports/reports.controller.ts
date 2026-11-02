@@ -37,6 +37,13 @@ export class ReportsController {
     return this.svc.trend(a, p.fy, p.fund ?? null);
   }
 
+  /** आम्दानी of one source: totals per income head and the income vouchers of both its funds. */
+  @Get('income/:source')
+  income(@CurrentActor() a: Actor, @Param('source') source: string, @Query() q: unknown) {
+    const p = parse(z.object({ fy: z.string().uuid() }), q);
+    return this.svc.income(a, parse(z.enum(['INTERNAL', 'GRANT']), source), p.fy);
+  }
+
   @Get('fund-summaries')
   summaries(@CurrentActor() a: Actor, @Query() q: unknown) {
     return this.svc.fundSummaries(a, parse(z.object({ fy: z.string().uuid() }), q).fy);

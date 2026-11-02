@@ -11,14 +11,14 @@ import { Select, Spinner } from './ui';
 interface TrendData {
   fiscalYear: { startYear: number };
   allocated: string | null;
-  days: { dateBs: string; fundId: string; expense: string; paid: string; tds: string }[];
+  days: { dateBs: string; fundId: string; expense: string; paid: string; tds: string; income: string }[];
 }
-type Metric = 'expense' | 'paid' | 'tds';
+type Metric = 'expense' | 'paid' | 'tds' | 'income';
 
 /**
  * Money-flow chart with a period control: whole fiscal year by BS month, one month by week,
  * or cumulative spending against the appropriation.
- * With fundId: series are expense / bank payment / TDS. Without: one expense line per fund.
+ * With fundId: series are expense / bank payment / TDS (+ income when there is any). Without: one expense line per fund.
  */
 export function TrendPanel({ fundId }: { fundId?: string }) {
   const { t } = useTranslation();
@@ -72,6 +72,8 @@ export function TrendPanel({ fundId }: { fundId?: string }) {
         { key: 'paid', label: t('chart.paid'), slot: 2, values: sumBy('paid') },
         { key: 'tds', label: t('chart.tds'), slot: 3, values: sumBy('tds') },
       ];
+      const income = sumBy('income');
+      if (income.some((x) => x !== 0n)) series.push({ key: 'income', label: t('chart.income'), slot: 4, values: income });
     } else {
       // Fixed fund order -> fixed colour per fund, whichever funds have data.
       const order = ['INTERNAL:CAPITAL', 'INTERNAL:RECURRENT', 'GRANT:CAPITAL', 'GRANT:RECURRENT'];

@@ -187,7 +187,7 @@ export function VoucherView() {
       <PageTitle
         actions={
           <>
-            {v.status === 'DRAFT' && mine && can.write && v.mode !== 'TAX_DEPOSIT' && (
+            {v.status === 'DRAFT' && mine && can.write && v.mode !== 'TAX_DEPOSIT' && v.mode !== 'RECEIPT' && (
               <Button variant="secondary" onClick={() => nav(`${base}/vouchers/${v.id}/edit`)}>
                 <Pencil className="h-4 w-4" /> {t('common.edit')}
               </Button>
@@ -212,7 +212,7 @@ export function VoucherView() {
                 <Ban className="h-4 w-4" /> {t('common.cancel')}
               </Button>
             )}
-            {v.status === 'APPROVED' && !v.paidAt && can.write && (
+            {v.status === 'APPROVED' && !v.paidAt && can.write && v.mode !== 'RECEIPT' && (
               <Button variant="secondary" onClick={() => (setErr(null), setAction('paid'))}>
                 <Wallet className="h-4 w-4" /> {t('common.markPaid')}
               </Button>

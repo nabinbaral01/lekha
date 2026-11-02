@@ -121,16 +121,18 @@ export class ReportsService {
     const { fy } = await this.scope(actor, fundId, fiscalYearId);
     const vouchers = await this.prisma.voucher.findMany({
       where: { orgId: actor.orgId, fiscalYearId: fy.id, status: 'APPROVED', ...(fundId ? { fundId } : {}) },
-      select: { dateBs: true, fundId: true, lines: { select: { side: true, accountKind: true, accountId: true, amount: true } } },
+      select: { dateBs: true, fundId: true, mode: true, lines: { select: { side: true, accountKind: true, accountId: true, amount: true } } },
       orderBy: { dateAd: 'asc' },
     });
-    const days = new Map<string, { dateBs: string; fundId: string; expense: bigint; paid: bigint; tds: bigint }>();
+    const days = new Map<string, { dateBs: string; fundId: string; expense: bigint; paid: bigint; tds: bigint; income: bigint }>();
     for (const v of vouchers) {
       const key = `${v.dateBs}|${v.fundId}`;
-      const d = days.get(key) ?? { dateBs: v.dateBs, fundId: v.fundId, expense: 0n, paid: 0n, tds: 0n };
+      const d = days.get(key) ?? { dateBs: v.dateBs, fundId: v.fundId, expense: 0n, paid: 0n, tds: 0n, income: 0n };
       const c = cashBookColumns(v.lines);
       d.expense += c.budgetExpense;
-      d.paid += c.bankCr - c.bankDr + c.cashCr - c.cashDr;
+      // Money received as income is not a negative payment: it is its own series.
+      if (v.mode === 'RECEIPT') d.income += c.bankDr - c.bankCr + c.cashDr - c.cashCr;
+      else d.paid += c.bankCr - c.bankDr + c.cashCr - c.cashDr;
       for (const l of v.lines) if (l.accountKind === 'TDS_PAYABLE' && l.side === 'CR') d.tds += l.amount;
       days.set(key, d);
     }
@@ -138,7 +140,45 @@ export class ReportsService {
     return { fiscalYear: { id: fy.id, code: fy.code, startYear: fy.startYear, startBs: fy.startBs, endBs: fy.endBs }, allocated: alloc, days: [...days.values()] };
   }
 
-  /** Home/fund cards: budget, spending, bank share, workflow counts and pending TDS per fund. */
+  /**
+   * आम्दानी of one source (आन्तरिक/अनुदान) for the fiscal year: every income head of that source with
+   * its approved and pending (submitted/draft) receipts, and the income vouchers of both its funds.
+   */
+  async income(actor: Actor, source: 'INTERNAL' | 'GRANT', fiscalYearId: string) {
+    const { fy } = await this.scope(actor, null, fiscalYearId);
+    const funds = await this.prisma.fund.findMany({ where: { orgId: actor.orgId, source } });
+    const heads = await this.prisma.ledgerAccount.findMany({ where: { orgId: actor.orgId, kind: 'REVENUE', source }, orderBy: [{ sortOrder: 'asc' }, { code: 'asc' }] });
+    const vouchers = await this.prisma.voucher.findMany({
+      where: { orgId: actor.orgId, fiscalYearId: fy.id, fundId: { in: funds.map((f) => f.id) }, mode: 'RECEIPT' },
+      include: { lines: true, payees: { orderBy: { sn: 'asc' } }, fund: { select: { id: true, source: true, nature: true } } },
+      orderBy: [{ dateAd: 'desc' }, { createdAt: 'desc' }],
+    });
+    const received = new Map<string, bigint>();
+    const pending = new Map<string, bigint>();
+    const rows = vouchers.map((v) => {
+      const line = v.lines.find((l) => l.accountKind === 'REVENUE');
+      const deposit = v.lines.find((l) => l.side === 'DR');
+      if (line && (v.status === 'APPROVED' || v.status === 'SUBMITTED' || v.status === 'DRAFT')) {
+        const m = v.status === 'APPROVED' ? received : pending;
+        m.set(line.accountId, (m.get(line.accountId) ?? 0n) + line.amount);
+      }
+      return {
+        id: v.id, number: v.number, dateBs: v.dateBs, status: v.status, rejectComment: v.rejectComment, narration: v.narration, amount: v.totalAmount,
+        fund: v.fund, accountId: line?.accountId ?? null, depositTo: deposit?.accountKind ?? 'BANK',
+        receivedFrom: v.payees[0]?.name ?? '', receiptNo: v.payees[0]?.billNo ?? '',
+      };
+    });
+    const sum = (m: Map<string, bigint>) => [...m.values()].reduce((s, x) => s + x, 0n);
+    return {
+      fiscalYear: { id: fy.id, code: fy.code },
+      funds,
+      heads: heads.map((h) => ({ id: h.id, code: h.code, nameNe: h.nameNe, nameEn: h.nameEn, active: h.active, received: received.get(h.id) ?? 0n, pending: pending.get(h.id) ?? 0n })),
+      totals: { received: sum(received), pending: sum(pending) },
+      vouchers: rows,
+    };
+  }
+
+  /** Home/fund cards: budget, spending, income, bank share, workflow counts and pending TDS per fund. */
   async fundSummaries(actor: Actor, fiscalYearId: string) {
     const funds = await this.prisma.fund.findMany({ where: { orgId: actor.orgId } });
     const bankAccs = await this.prisma.ledgerAccount.findMany({ where: { orgId: actor.orgId, kind: 'BANK' }, select: { id: true } });
@@ -146,6 +186,7 @@ export class ReportsService {
     for (const f of funds) {
       const alloc = await allocations(this.prisma, fiscalYearId, f.id);
       const spent = await netByAccount(this.prisma, fiscalYearId, f.id, { kinds: ['EXPENSE'] });
+      const revenue = await netByAccount(this.prisma, fiscalYearId, f.id, { kinds: ['REVENUE'] });
       const open = await openings(this.prisma, fiscalYearId, f.id);
       const bankNet = await netByAccount(this.prisma, fiscalYearId, f.id, { kinds: ['BANK'] });
       const bank = bankAccs.reduce((s, a) => s + (open.get(a.id) ?? 0n) + (bankNet.get(a.id) ?? 0n), 0n);
@@ -161,6 +202,7 @@ export class ReportsService {
         fund: f,
         allocated: sum(alloc),
         spent: sum(spent),
+        income: -sum(revenue), // income heads carry a credit balance
         bank,
         pendingTds: tds._sum.tds ?? 0n,
         counts: Object.fromEntries(counts.map((c) => [c.status, c._count])),

@@ -342,7 +342,7 @@ function OpeningTab() {
   const list = useQuery({ queryKey: ['openings', fy?.id], queryFn: () => api<{ id: string; fundId: string; accountId: string; dateBs: string; amount: string }[]>(`/opening-balances?fy=${fy!.id}`), enabled: !!fy });
   const [f, setF] = useState({ fundId: meta?.funds[0]?.id ?? '', accountId: '', dateBs: fy?.startBs ?? '', amount: '' });
   const s = useSave();
-  const nonExpense = (accounts.data ?? []).filter((a) => a.kind !== 'EXPENSE');
+  const nonExpense = (accounts.data ?? []).filter((a) => a.kind !== 'EXPENSE' && a.kind !== 'REVENUE');
   return (
     <div className="space-y-4">
       <Card className="p-4">
@@ -640,7 +640,7 @@ function AccountsTab() {
   const save = async (e: FormEvent) => {
     e.preventDefault();
     if (!edit) return;
-    const body = { code: edit.code, activityNo: edit.activityNo ?? '', nameNe: edit.nameNe, nameEn: edit.nameEn, folioNo: edit.folioNo ?? '', bankName: edit.bankName ?? '', bankBranch: edit.bankBranch ?? '', accountNo: edit.accountNo ?? '', active: edit.active ?? true, ...(edit.kind === 'EXPENSE' ? { nature: edit.nature } : {}) };
+    const body = { code: edit.code, activityNo: edit.activityNo ?? '', nameNe: edit.nameNe, nameEn: edit.nameEn, folioNo: edit.folioNo ?? '', bankName: edit.bankName ?? '', bankBranch: edit.bankBranch ?? '', accountNo: edit.accountNo ?? '', active: edit.active ?? true, ...(edit.kind === 'EXPENSE' ? { nature: edit.nature } : {}), ...(edit.kind === 'REVENUE' ? { source: edit.source ?? 'INTERNAL' } : {}) };
     const ok = await s.run(() => (edit.id ? patch(`/accounts/${edit.id}`, body) : post('/accounts', { ...body, kind: edit.kind })));
     if (ok) setEdit(null);
   };
@@ -671,7 +671,7 @@ function AccountsTab() {
                 <td className="px-3 py-2 tabular-nums">{digits(a.code)}</td>
                 <td className="px-3 py-2">{digits(a.activityNo)}</td>
                 <td className="px-3 py-2">{name(a)}</td>
-                <td className="px-3 py-2">{a.nature && t(`nav.${a.nature}`)}</td>
+                <td className="px-3 py-2">{a.nature ? t(`nav.${a.nature}`) : a.source ? `${t('nav.INCOME')} · ${t(`nav.${a.source}`)}` : ''}</td>
                 <td className="px-3 py-2">{digits(a.folioNo)}</td>
                 <td className="px-3 py-2 text-right">
                   <Button size="sm" variant="ghost" onClick={() => setEdit(a)}>
@@ -689,7 +689,7 @@ function AccountsTab() {
             {!edit.id && (
               <Field label={t('admin.kind')}>
                 <Select value={edit.kind} onChange={(e) => setEdit({ ...edit, kind: e.target.value })}>
-                  {['EXPENSE', 'BANK', 'CASH', 'TDS_PAYABLE', 'ADVANCE', 'DEPOSIT', 'OTHER'].map((k) => (
+                  {['EXPENSE', 'REVENUE', 'BANK', 'CASH', 'TDS_PAYABLE', 'ADVANCE', 'DEPOSIT', 'OTHER'].map((k) => (
                     <option key={k}>{k}</option>
                   ))}
                 </Select>
@@ -700,6 +700,14 @@ function AccountsTab() {
                 <Select value={edit.nature ?? 'RECURRENT'} onChange={(e) => setEdit({ ...edit, nature: e.target.value as 'CAPITAL' | 'RECURRENT' })}>
                   <option value="RECURRENT">{t('nav.RECURRENT')}</option>
                   <option value="CAPITAL">{t('nav.CAPITAL')}</option>
+                </Select>
+              </Field>
+            )}
+            {edit.kind === 'REVENUE' && (
+              <Field label={t('admin.source')}>
+                <Select value={edit.source ?? 'INTERNAL'} onChange={(e) => setEdit({ ...edit, source: e.target.value as 'INTERNAL' | 'GRANT' })}>
+                  <option value="INTERNAL">{t('nav.INTERNAL')}</option>
+                  <option value="GRANT">{t('nav.GRANT')}</option>
                 </Select>
               </Field>
             )}

@@ -50,7 +50,16 @@ export interface VoucherInput {
   projectName?: string;
   eftRef?: string;
   narration: string;
-  mode: 'PAYMENT' | 'MANUAL';
+  mode: 'PAYMENT' | 'MANUAL' | 'RECEIPT';
+  /** आम्दानी: money received into the bank (or cash) against an income head of this fund's source. */
+  receipt?: {
+    revenueAccountId: string;
+    depositTo: 'BANK' | 'CASH';
+    bankAccountId?: string;
+    amount: bigint;
+    receivedFrom: string;
+    receiptNo?: string;
+  };
   payment?: SourceCols & {
     expenseAccountId: string;
     bankAccountId?: string;
@@ -207,6 +216,26 @@ export class VouchersService {
       lines = buildPaymentLines({ expenseAccountId: p.expenseAccountId, bankAccountId: bank.id, tdsAccountId: tdsAcc.id, bill: gross, tds }).map((l) =>
         l.accountKind === 'EXPENSE' ? { ...l, ...src } : { ...l, src1Agency: src.src1Agency, src1Method: src.src1Method, src2Agency: src.src2Agency, src2Method: src.src2Method },
       );
+    } else if (input.mode === 'RECEIPT') {
+      const r = input.receipt;
+      if (!r) throw fail('RECEIPT_REQUIRED');
+      const head = (await this.accountsById(tx, orgId, [r.revenueAccountId])).get(r.revenueAccountId);
+      if (!head || head.kind !== 'REVENUE') throw fail('INCOME_HEAD_REQUIRED');
+      if (head.source !== fund.source) throw fail('INCOME_SOURCE_MISMATCH', { account: `${head.code} ${head.nameNe}` });
+      const into =
+        r.depositTo === 'CASH'
+          ? await this.defaultAccount(tx, orgId, 'CASH', 'CASH_ACCOUNT_MISSING')
+          : r.bankAccountId
+            ? (await this.accountsById(tx, orgId, [r.bankAccountId])).get(r.bankAccountId)
+            : await this.defaultAccount(tx, orgId, 'BANK', 'BANK_ACCOUNT_REQUIRED');
+      if (!into || into.kind !== r.depositTo || !into.active) throw fail('BANK_ACCOUNT_REQUIRED');
+      if (!r.receivedFrom.trim()) throw fail('RECEIVED_FROM_REQUIRED');
+      lines = [
+        { side: 'DR', accountKind: into.kind, accountId: into.id, amount: r.amount },
+        { side: 'CR', accountKind: 'REVENUE', accountId: head.id, amount: r.amount },
+      ];
+      // The payer and receipt number are kept as the voucher's only party row (रसिद नं. in the bill-number column).
+      payees = [{ sn: 1, payeeId: null, name: r.receivedFrom.trim(), pan: '', bankName: '', accountNo: '', billNo: r.receiptNo?.trim() ?? '', gross: r.amount, tds: 0n, net: r.amount, eftRef: '' }];
     } else {
       if (!input.lines?.length) throw fail('VOUCHER_MIN_LINES');
       lines = input.lines.map((l) => ({ ...l, accountKind: 'OTHER' as const }));
@@ -228,6 +257,7 @@ export class VouchersService {
       if (!acc.active) issues.push({ code: 'ACCOUNT_INACTIVE', line: i + 1, params: { account: acc.nameNe } });
       l.accountKind = acc.kind;
       if (acc.kind === 'EXPENSE' && acc.nature !== fund.nature) issues.push({ code: 'HEAD_NATURE_MISMATCH', line: i + 1, params: { account: `${acc.code} ${acc.nameNe}` } });
+      if (acc.kind === 'REVENUE' && acc.source !== fund.source) issues.push({ code: 'INCOME_SOURCE_MISMATCH', line: i + 1, params: { account: `${acc.code} ${acc.nameNe}` } });
     });
     if (input.mode === 'PAYMENT' && lines[0]?.accountKind !== 'EXPENSE') issues.push({ code: 'PAYMENT_EXPENSE_HEAD_REQUIRED' });
     issues.push(...validateLines(lines).filter((i) => !(i.code === 'LINE_ACCOUNT_REQUIRED' && issues.some((x) => x.code === i.code && x.line === i.line))));

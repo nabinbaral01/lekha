@@ -4,7 +4,7 @@ import type ne from './ne';
 const en: typeof ne = {
   app: { title: 'Accounting System', tagline: 'Government cash-basis accounting' },
   nav: {
-    home: 'Home', INTERNAL: 'Internal', GRANT: 'Grant', CAPITAL: 'Capital expenditure', RECURRENT: 'Recurrent expenditure',
+    home: 'Home', INTERNAL: 'Internal', GRANT: 'Grant', CAPITAL: 'Capital expenditure', RECURRENT: 'Recurrent expenditure', INCOME: 'Income',
     dashboard: 'Dashboard', voucherEntry: 'Voucher Entry', voucherList: 'Voucher List', cashBook: 'Bank-Cash Book', budgetLedger: 'Budget Ledger',
     advance: 'Advance', tax: 'Tax (TDS)', budgetStatement: 'Budget Statement', reports: 'Reports', admin: 'Settings', audit: 'Audit Trail',
     consolidated: 'All funds (consolidated)', logout: 'Log out',
@@ -24,7 +24,14 @@ const en: typeof ne = {
   role: { SUPER_ADMIN: 'Head (Super Admin)', ACCOUNTANT: 'Accountant', AUDITOR: 'Auditor' },
   status: { DRAFT: 'Draft', SUBMITTED: 'Submitted', APPROVED: 'Approved', CANCELLED: 'Cancelled', REJECTED: 'Sent back', PAID: 'Paid' },
   vtype: { NORMAL: 'Normal', ADJUSTMENT: 'Adjustment', REVERSAL: 'Reversal' },
-  vmode: { PAYMENT: 'Payment', TAX_DEPOSIT: 'Tax deposit', MANUAL: 'Debit/Credit' },
+  vmode: { PAYMENT: 'Payment', TAX_DEPOSIT: 'Tax deposit', MANUAL: 'Debit/Credit', RECEIPT: 'Income' },
+  income: {
+    desc: { INTERNAL: 'Tickets, rent, donations, interest', GRANT: 'Federal, provincial, local, other bodies' }, chooseKind: 'Choose expenditure or income', received: 'Received (approved)', pending: 'Awaiting approval',
+    new: 'New income entry', head: 'Income head', chooseHead: 'Choose income head...', bySource: 'Income by source', code: 'Revenue head no.',
+    receivedFrom: 'Received from (person/body)', receiptNo: 'Receipt no.', depositTo: 'Deposited into', BANK: 'Bank account', CASH: 'Cash', fund: 'Fund', fundHint: 'Which fund this money will be used in',
+    list: 'Income vouchers', total: 'Total income', saved: 'Income voucher submitted for approval. It enters the bank-cash book once the head approves it.',
+    noHeads: 'No income heads for this source — add them in Settings › Accounts/heads.', narration: 'Amount received for {{head}}', verifyCodes: 'Revenue codes of the income heads are provisional — verify them against the office books.',
+  },
   side: { DR: 'Dr', CR: 'Cr' },
   home: {
     welcome: 'Welcome', chooseSource: 'Choose a fund', chooseNature: 'Choose expenditure type', budget: 'Budget', spentPct: 'Utilisation', bank: 'Bank balance',
@@ -62,12 +69,12 @@ const en: typeof ne = {
     entryType: 'Budget entry type', APPROPRIATION: 'Appropriation', ADDITIONAL: 'Additional budget', REDUCTION: 'Reduction', TRANSFER: 'Transfer (रकमान्तर)', toHead: 'Transfer to head', note: 'Note / decision ref.',
     fund: 'Fund', newUser: 'New user', post: 'Post', role: 'Role', active: 'Active', unlock: 'Unlock', resetPassword: 'New password', rate: 'Rate (%)', effectiveFrom: 'Effective from',
     newRate: 'Add new rate', lockMonth: 'Lock month', locked: 'Locked', open: 'Open', startNumber: 'Starting voucher no.', startNumberHelp: 'Can be set once, when moving over from paper books.',
-    kind: 'Kind', nature: 'Nature', rounding: 'TDS rounding', UP_RUPEE: 'Up to next whole rupee', NEAREST_RUPEE: 'Nearest rupee', DOWN_RUPEE: 'Down to rupee', PAISA: 'To the paisa',
+    kind: 'Kind', nature: 'Nature', source: 'Source (internal/grant)', rounding: 'TDS rounding', UP_RUPEE: 'Up to next whole rupee', NEAREST_RUPEE: 'Nearest rupee', DOWN_RUPEE: 'Down to rupee', PAISA: 'To the paisa',
     verifyCodes: "Expense-head economic codes are provisional — verify them against the office's budget book.", verifyTax: 'Have a Chartered Accountant verify the tax rates before go-live.',
   },
   audit: { when: 'When', who: 'User', action: 'Action', entity: 'Record', chainOk: 'Audit chain intact — no tampering detected', chainBroken: 'Warning: tampering detected at record #{{id}}', verify: 'Verify' },
   chart: {
-    fundTitle: 'Money flow', allTitle: 'Spending by fund', expense: 'Budget expense', paid: 'Bank payments', tds: 'TDS withheld',
+    fundTitle: 'Money flow', allTitle: 'Spending by fund', expense: 'Budget expense', paid: 'Bank payments', tds: 'TDS withheld', income: 'Income',
     byMonth: 'Fiscal year — monthly', cumulative: 'Cumulative vs appropriation', weekly: 'Month — weekly', week: 'Week', period: 'Period',
     tableView: 'Show as table', chartView: 'Show as chart', noSpend: 'No approved spending in this period',
   },
@@ -159,6 +166,12 @@ const en: typeof ne = {
     OPENING_AFTER_APPROVAL: 'Opening balances cannot change after vouchers are approved.',
     USERNAME_EXISTS: 'This username already exists.',
     CANNOT_DEMOTE_SELF: 'You cannot deactivate or demote your own account.',
+    RECEIPT_REQUIRED: 'Fill in the income details.',
+    INCOME_HEAD_REQUIRED: 'Choose an income head.',
+    INCOME_SOURCE_MISMATCH: '"{{account}}" is not an income head of this source (internal/grant mismatch).',
+    INCOME_SOURCE_REQUIRED: 'Choose whether the income head is internal or grant.',
+    RECEIVED_FROM_REQUIRED: 'Name of the person/body paying the money is required.',
+    CASH_ACCOUNT_MISSING: 'Cash account not found.',
   },
 };
 export default en;

@@ -8,6 +8,7 @@ export type AccountKind =
   | 'TDS_PAYABLE' // tax withheld -> कर कट्टी खाता, विविध columns
   | 'ADVANCE' // पेस्की -> advance ledger, पेस्की columns
   | 'DEPOSIT' // धरौटी / other liabilities -> विविध columns
+  | 'REVENUE' // आम्दानी शीर्षक (income head) -> विविध columns, income ledger
   | 'OTHER';
 
 export type Side = 'DR' | 'CR';

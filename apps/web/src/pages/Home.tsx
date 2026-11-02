@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Building2, CalendarClock, Clock, Gift, Hammer, Landmark, Receipt, Wrench } from 'lucide-react';
+import { ArrowRight, Building2, CalendarClock, Clock, Coins, Gift, Hammer, Landmark, Receipt, Wrench } from 'lucide-react';
 import { diffBsDays, parseAmount, todayBs } from '@pa/core';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -11,6 +11,7 @@ import type { Fund, Money } from '../lib/types';
 import { Breadcrumb } from '../components/Layout';
 import { Button, Card, cx, ErrorBox, Field, Input, Spinner } from '../components/ui';
 import { TrendPanel } from '../components/TrendPanel';
+import { useIncome } from './Income';
 
 export function Login() {
   const { t } = useTranslation();
@@ -66,6 +67,7 @@ export interface Summary {
   fund: Fund;
   allocated: Money;
   spent: Money;
+  income: Money;
   bank: Money;
   pendingTds: Money;
   counts: Partial<Record<'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED', number>>;
@@ -178,14 +180,15 @@ export function SourcePage() {
   const { money, digits } = useFmt();
   const s = useSummaries();
   const SRC = source.toUpperCase();
+  const inc = useIncome(SRC);
   if (SRC !== 'INTERNAL' && SRC !== 'GRANT') return null;
   return (
     <div>
       <Breadcrumb items={[{ label: t(`nav.${SRC}`) }]} />
       <h1 className="mb-6 text-2xl font-semibold">
-        {t(`nav.${SRC}`)} — {t('home.chooseNature')}
+        {t(`nav.${SRC}`)} — {t('income.chooseKind')}
       </h1>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {(['CAPITAL', 'RECURRENT'] as const).map((n) => {
           const sm = s.data?.find((x) => x.fund.source === SRC && x.fund.nature === n);
           const p = sm ? pct(sm.spent, sm.allocated) : 0;
@@ -226,6 +229,32 @@ export function SourcePage() {
             </Link>
           );
         })}
+        <Link to={`/f/${source}/income`} className="group">
+          <Card className="h-full p-6 transition group-hover:border-success group-hover:shadow-md">
+            <div className="mb-4 flex items-center gap-4">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-success-soft text-success">
+                <Coins className="h-7 w-7" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{t('nav.INCOME')}</h2>
+                <p className="text-subtle">{t(`income.desc.${SRC}`)}</p>
+              </div>
+              <ArrowRight className="ml-auto h-6 w-6 text-subtle transition group-hover:translate-x-1 group-hover:text-success" />
+            </div>
+            {inc.data && (
+              <div className="mb-2 grid grid-cols-3 gap-2 text-sm">
+                <div className="col-span-2">
+                  <div className="text-subtle">{t('income.received')}</div>
+                  <div className="tabular-nums">{money(inc.data.totals.received)}</div>
+                </div>
+                <div>
+                  <div className="text-subtle">{t('home.awaitingApproval')}</div>
+                  <div className="tabular-nums">{digits(inc.data.vouchers.filter((v) => v.status === 'SUBMITTED').length)}</div>
+                </div>
+              </div>
+            )}
+          </Card>
+        </Link>
       </div>
     </div>
   );

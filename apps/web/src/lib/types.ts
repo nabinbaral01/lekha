@@ -15,6 +15,6 @@ export interface Org {
   accountsHeadName: string; accountsHeadPost: string; officeHeadName: string; officeHeadPost: string;
 }
 export interface Meta { org: Org; funds: Fund[]; fiscalYears: FiscalYear[]; currentFiscalYearId: string | null; todayBs: string; subHeads: { id: string; code: string; nameNe: string; nameEn: string }[]; taxRules: TaxRule[] }
-export interface Account { id: string; kind: string; code: string; activityNo: string; nameNe: string; nameEn: string; nature: Nature | null; folioNo: string; bankName: string; bankBranch: string; accountNo: string; active: boolean }
+export interface Account { id: string; kind: string; code: string; activityNo: string; nameNe: string; nameEn: string; nature: Nature | null; source: Source | null; folioNo: string; bankName: string; bankBranch: string; accountNo: string; active: boolean }
 export interface Payee { id: string; name: string; pan: string; vatRegistered: boolean; payeeType: string; defaultTaxCode: string | null; bankName: string; bankBranch: string; accountNo: string; phone: string; address: string; active: boolean }
 export interface BudgetHead { id: string; code: string; activityNo: string; nameNe: string; nameEn: string; folioNo: string; allocated: Money; spent: Money; pending: Money; remaining: Money }

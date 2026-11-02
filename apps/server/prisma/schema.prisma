@@ -33,6 +33,7 @@ enum AccountKind {
   TDS_PAYABLE
   ADVANCE
   DEPOSIT
+  REVENUE // आम्दानी शीर्षक: income heads, tagged with the source (आन्तरिक/अनुदान) they belong to
   OTHER
 }
 
@@ -58,6 +59,7 @@ enum VoucherMode {
   PAYMENT
   TAX_DEPOSIT
   MANUAL
+  RECEIPT // आम्दानी: Dr bank/cash, Cr income head
 }
 
 enum TdsRounding {
@@ -201,6 +203,7 @@ model LedgerAccount {
   nameNe     String
   nameEn     String
   nature     Nature? // required for EXPENSE: capital heads only in पूँजीगत funds
+  source     FundSource? // required for REVENUE: income heads are used only in their own source's funds
   folioNo    String      @default("") // खाता पाना नं.
   bankName   String      @default("")
   bankBranch String      @default("")

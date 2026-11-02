@@ -109,17 +109,18 @@ export class MasterController {
   // ───────── chart of accounts ─────────
   @Get('accounts')
   accounts(@CurrentActor() a: Actor, @Query() q: unknown) {
-    const p = parse(z.object({ kind: z.enum(['EXPENSE', 'BANK', 'CASH', 'TDS_PAYABLE', 'ADVANCE', 'DEPOSIT', 'OTHER']).optional() }), q);
+    const p = parse(z.object({ kind: z.enum(['EXPENSE', 'BANK', 'CASH', 'TDS_PAYABLE', 'ADVANCE', 'DEPOSIT', 'REVENUE', 'OTHER']).optional() }), q);
     return this.prisma.ledgerAccount.findMany({ where: { orgId: a.orgId, ...(p.kind ? { kind: p.kind } : {}) }, orderBy: [{ kind: 'asc' }, { sortOrder: 'asc' }, { code: 'asc' }] });
   }
 
   private accountSchema = z.object({
-    kind: z.enum(['EXPENSE', 'BANK', 'CASH', 'TDS_PAYABLE', 'ADVANCE', 'DEPOSIT', 'OTHER']),
+    kind: z.enum(['EXPENSE', 'BANK', 'CASH', 'TDS_PAYABLE', 'ADVANCE', 'DEPOSIT', 'REVENUE', 'OTHER']),
     code: str(30).min(1),
     activityNo: str(30).optional(),
     nameNe: str().min(1),
     nameEn: str().min(1),
     nature: z.enum(['CAPITAL', 'RECURRENT']).nullable().optional(),
+    source: z.enum(['INTERNAL', 'GRANT']).nullable().optional(),
     folioNo: str(30).optional(),
     bankName: str().optional(),
     bankBranch: str().optional(),
@@ -133,9 +134,10 @@ export class MasterController {
   createAccount(@CurrentActor() a: Actor, @Body() body: unknown) {
     const p = parse(this.accountSchema, body);
     if (p.kind === 'EXPENSE' && !p.nature) throw new AppError('EXPENSE_NATURE_REQUIRED');
+    if (p.kind === 'REVENUE' && !p.source) throw new AppError('INCOME_SOURCE_REQUIRED');
     return this.prisma.$transaction(async (tx) => {
       if (await tx.ledgerAccount.findUnique({ where: { orgId_kind_code_activityNo: { orgId: a.orgId, kind: p.kind, code: p.code, activityNo: p.activityNo ?? '' } } })) throw Conflict('ACCOUNT_CODE_EXISTS');
-      const acc = await tx.ledgerAccount.create({ data: { ...p, nature: p.kind === 'EXPENSE' ? p.nature : null, orgId: a.orgId } });
+      const acc = await tx.ledgerAccount.create({ data: { ...p, nature: p.kind === 'EXPENSE' ? p.nature : null, source: p.kind === 'REVENUE' ? p.source : null, orgId: a.orgId } });
       await this.audit.record(tx, a, 'CREATE', 'LedgerAccount', acc.id, undefined, acc);
       return acc;
     });
@@ -150,7 +152,8 @@ export class MasterController {
       if (!before) throw NotFound();
       const used = await tx.voucherLine.count({ where: { accountId: id } });
       // A used head cannot change code or capital/recurrent classification (it would rewrite history).
-      if (used && ((p.code && p.code !== before.code) || (p.nature !== undefined && p.nature !== before.nature))) throw Conflict('ACCOUNT_IN_USE');
+      if (used && ((p.code && p.code !== before.code) || (p.nature !== undefined && p.nature !== before.nature) || (p.source !== undefined && p.source !== before.source))) throw Conflict('ACCOUNT_IN_USE');
+      if (before.kind === 'REVENUE' && p.source === null) throw new AppError('INCOME_SOURCE_REQUIRED');
       const after = await tx.ledgerAccount.update({ where: { id }, data: p });
       await this.audit.record(tx, a, 'UPDATE', 'LedgerAccount', id, before, after);
       return after;
@@ -331,7 +334,7 @@ export class MasterController {
       const fund = await tx.fund.findFirst({ where: { id: p.fundId, orgId: a.orgId } });
       const acc = await tx.ledgerAccount.findFirst({ where: { id: p.accountId, orgId: a.orgId } });
       if (!fund || !acc) throw NotFound();
-      if (acc.kind === 'EXPENSE') throw new AppError('OPENING_NOT_FOR_EXPENSE');
+      if (acc.kind === 'EXPENSE' || acc.kind === 'REVENUE') throw new AppError('OPENING_NOT_FOR_EXPENSE');
       if (await tx.voucher.count({ where: { fiscalYearId: fy.id, fundId: p.fundId, status: 'APPROVED' } })) throw Conflict('OPENING_AFTER_APPROVAL');
       const key = { fiscalYearId_fundId_accountId: { fiscalYearId: fy.id, fundId: p.fundId, accountId: p.accountId } };
       const before = await tx.openingBalance.findUnique({ where: key });

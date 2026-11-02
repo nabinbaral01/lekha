@@ -22,6 +22,7 @@ export interface F203Payee {
   bankName: string;
   accountNo: string;
   net: Money;
+  billNo?: string;
   eftRef: string;
 }
 interface Signer {
@@ -38,6 +39,7 @@ export interface F203Data {
   projectName: string;
   budgetSubHead?: { code: string; nameNe: string; nameEn: string } | null;
   narration: string;
+  mode?: string;
   lines: F203Line[];
   payees: F203Payee[];
   totals: { debit: Money; credit: Money };
@@ -92,9 +94,13 @@ export function Form203({ v }: { v: F203Data }) {
   const isLocal = level.includes('स्थानीय');
   const sigDate = (s?: Signer | null) => (s?.at ? digits(todayBs(new Date(s.at))) : ''); // BS date, Nepal time
   const lineAmt = (l: F203Line, side: 'DR' | 'CR') => (l.side === side ? money(l.amount) : '');
-  const payTotal = v.payees.reduce((s, p) => s + parseAmount(p.net), 0n);
+  // An income voucher pays nobody: its payer and receipt no. go into the narration, the payee table stays blank.
+  const receipt = v.mode === 'RECEIPT' ? v.payees[0] : undefined;
+  const payees = receipt ? [] : v.payees;
+  const narration = v.narration.trim().replace(/[।.]+$/, '') + (receipt ? ` — बुझाउने: ${receipt.name}${receipt.billNo ? `, रसिद नं. ${digits(receipt.billNo)}` : ''}` : '');
+  const payTotal = payees.reduce((s, p) => s + parseAmount(p.net), 0n);
   const blankLines = Math.max(0, MIN_LINE_ROWS - v.lines.length);
-  const blankPayees = Math.max(0, MIN_PAYEE_ROWS - v.payees.length);
+  const blankPayees = Math.max(0, MIN_PAYEE_ROWS - payees.length);
 
   return (
     <div lang="ne" className="print-sheet relative mx-auto max-w-[1100px] rounded-lg border border-border bg-surface p-6 text-[13px] leading-snug shadow-sm print:text-[10px]">
@@ -233,7 +239,7 @@ export function Form203({ v }: { v: F203Data }) {
 
       <div className="mt-2 font-semibold underline">कारोबारको संक्षिप्त ब्यहोरा</div>
       <div className="mt-1">
-        ( <Blank min="min-w-[28rem]">{v.narration.trim().replace(/[।.]+$/, '')}</Blank> । )
+        ( <Blank min="min-w-[28rem]">{narration}</Blank> । )
       </div>
 
       <p className="mt-2">{ATTACHMENTS}</p>
@@ -254,7 +260,7 @@ export function Form203({ v }: { v: F203Data }) {
             </tr>
           </thead>
           <tbody>
-            {v.payees.map((p) => (
+            {payees.map((p) => (
               <tr key={p.sn}>
                 <td className="text-center">{digits(p.sn)}</td>
                 <td>{p.name}</td>
@@ -278,7 +284,7 @@ export function Form203({ v }: { v: F203Data }) {
               <td colSpan={5} className="text-center">
                 जम्मा
               </td>
-              <td className="num">{v.payees.length ? paisa(payTotal) : ''}</td>
+              <td className="num">{payees.length ? paisa(payTotal) : ''}</td>
               <td />
             </tr>
           </tfoot>

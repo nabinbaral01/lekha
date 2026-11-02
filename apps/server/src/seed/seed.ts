@@ -64,6 +64,21 @@ export const SEED_HEADS: { code: string; act: string; ne: string; en: string; na
   { code: '22711', act: '2', ne: 'विविध खर्च', en: 'Miscellaneous', nature: 'RECURRENT' },
 ];
 
+/** Income heads (आम्दानी शीर्षक) per source. PROVISIONAL revenue codes — verify before go-live (also in migration 20261102120001). */
+export const SEED_INCOME_HEADS: { code: string; ne: string; en: string; source: 'INTERNAL' | 'GRANT' }[] = [
+  { code: '14211', ne: 'प्रवेश/टिकट शुल्क', en: 'Entry / ticket fee', source: 'INTERNAL' },
+  { code: '14213', ne: 'होटल, लज तथा पसल भाडा', en: 'Hotel, lodge & shop rent', source: 'INTERNAL' },
+  { code: '14212', ne: 'सेवा शुल्क', en: 'Service fee', source: 'INTERNAL' },
+  { code: '14229', ne: 'पार्किङ शुल्क', en: 'Parking fee', source: 'INTERNAL' },
+  { code: '14311', ne: 'दान, भेटी तथा चढावा', en: 'Donations & offerings', source: 'INTERNAL' },
+  { code: '14111', ne: 'बैंक ब्याज', en: 'Bank interest', source: 'INTERNAL' },
+  { code: '14529', ne: 'विविध आम्दानी', en: 'Miscellaneous income', source: 'INTERNAL' },
+  { code: '13311', ne: 'संघीय सरकार अनुदान', en: 'Federal government grant', source: 'GRANT' },
+  { code: '13312', ne: 'प्रदेश सरकार अनुदान', en: 'Provincial government grant', source: 'GRANT' },
+  { code: '13313', ne: 'स्थानीय तह अनुदान', en: 'Local government grant', source: 'GRANT' },
+  { code: '13314', ne: 'अन्य संस्था/दातृ निकाय अनुदान', en: 'Other agency / donor grant', source: 'GRANT' },
+];
+
 /** Default TDS rules — MUST be verified by a Chartered Accountant against the current Finance Act. */
 export const SEED_TAX_RULES = [
   { code: 'VAT_SUPPLIER', nameNe: 'मू.अ.कर दर्ता आपूर्तिकर्ता/सेवा (मू.अ.कर बाहेकको रकममा)', nameEn: 'VAT-registered supplier/service (on amount excl. VAT)', rateBp: 150, excludeVat: true },
@@ -122,6 +137,7 @@ export async function seedOrganization(prisma: PrismaClient, opts: SeedOptions =
       { orgId: org.id, kind: 'TDS_PAYABLE', code: 'TDS', nameNe: 'अग्रिम कर कट्टी दायित्व', nameEn: 'TDS payable', sortOrder: 3 },
       { orgId: org.id, kind: 'ADVANCE', code: 'ADV', nameNe: 'पेस्की', nameEn: 'Advance', sortOrder: 4 },
       ...SEED_HEADS.map((h, i) => ({ orgId: org.id, kind: 'EXPENSE' as const, code: h.code, activityNo: h.act, nameNe: h.ne, nameEn: h.en, nature: h.nature, folioNo: String(i + 1), sortOrder: i + 1 })),
+      ...SEED_INCOME_HEADS.map((h, i) => ({ orgId: org.id, kind: 'REVENUE' as const, code: h.code, nameNe: h.ne, nameEn: h.en, source: h.source, sortOrder: 101 + i })),
     ],
   });
 

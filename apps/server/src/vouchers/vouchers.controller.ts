@@ -16,7 +16,17 @@ const voucherSchema = z.object({
   projectName: str(300),
   eftRef: str(100),
   narration: z.string().trim().min(1, 'E_NARRATION_REQUIRED').max(2000),
-  mode: z.enum(['PAYMENT', 'MANUAL']),
+  mode: z.enum(['PAYMENT', 'MANUAL', 'RECEIPT']),
+  receipt: z
+    .object({
+      revenueAccountId: z.string().uuid(),
+      depositTo: z.enum(['BANK', 'CASH']).default('BANK'),
+      bankAccountId: z.string().uuid().optional(),
+      amount: zPositiveAmount,
+      receivedFrom: z.string().trim().min(1).max(300),
+      receiptNo: str(100),
+    })
+    .optional(),
   confirmDuplicate: z.boolean().optional(),
   payment: z
     .object({

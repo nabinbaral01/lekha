@@ -7,6 +7,7 @@ import VoucherEntry from './pages/VoucherEntry';
 import { VoucherList, VoucherView } from './pages/Vouchers';
 import { BudgetStatement, CashBook, ConsolidatedCashBook, FundDashboard, NextPhase, TdsPage } from './pages/Reports';
 import Admin, { AuditPage } from './pages/Admin';
+import IncomePage from './pages/Income';
 
 export default function App() {
   const { user, loading, can } = useSession();
@@ -17,6 +18,7 @@ export default function App() {
       <Route element={<AppShell />}>
         <Route index element={<Home />} />
         <Route path="f/:source" element={<SourcePage />} />
+        <Route path="f/:source/income" element={<IncomePage />} />
         <Route path="f/:source/:nature" element={<FundLayout />}>
           <Route index element={<FundDashboard />} />
           {can.write && <Route path="vouchers/new" element={<VoucherEntry />} />}

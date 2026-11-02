@@ -387,3 +387,49 @@ describe('Roles & audit trail (section 3)', () => {
     await as('lekha').post(`/vouchers/${c.body.id}/cancel`, { reason: 'cleanup' }).expect(201);
   });
 });
+
+describe('आम्दानी (income)', () => {
+  test('income voucher: Dr bank / Cr income head of its own source; raises the shared bank balance once approved', async () => {
+    const heads = (await as('admin').get('/accounts?kind=REVENUE')).body as { id: string; nameNe: string; source: string }[];
+    const ticket = heads.find((h) => h.nameNe === 'प्रवेश/टिकट शुल्क')!;
+    const federal = heads.find((h) => h.nameNe === 'संघीय सरकार अनुदान')!;
+    expect(ticket.source).toBe('INTERNAL');
+    expect(federal.source).toBe('GRANT');
+    const receipt = (accountId: string, amount = '12500.50') => ({ dateBs: '2083.03.25', narration: 'टिकट बिक्री', mode: 'RECEIPT', receipt: { revenueAccountId: accountId, depositTo: 'BANK', amount, receivedFrom: 'टिकट काउन्टर', receiptNo: 'R-101' } });
+
+    // A grant income head cannot be received into an आन्तरिक fund, and vice versa.
+    expect((await as('lekha').post(`/funds/${fund}/vouchers`, receipt(federal.id))).body.code).toBe('INCOME_SOURCE_MISMATCH');
+    expect((await as('lekha').post(`/funds/${grantRecurrent}/vouchers`, receipt(ticket.id))).body.code).toBe('INCOME_SOURCE_MISMATCH');
+
+    const before = (await as('admin').get(`/reports/income/INTERNAL?fy=${fy}`)).body;
+    const bankBefore = await bankBalance();
+    const c = await as('lekha').post(`/funds/${fund}/vouchers`, receipt(ticket.id));
+    expect(c.status).toBe(201);
+    expect(c.body.lines.map((l: { side: string; accountKind: string; amount: string }) => [l.side, l.accountKind, l.amount])).toEqual([['DR', 'BANK', '12500.50'], ['CR', 'REVENUE', '12500.50']]);
+    await as('lekha').post(`/vouchers/${c.body.id}/submit`).expect(201);
+    const pending = (await as('admin').get(`/reports/income/INTERNAL?fy=${fy}`)).body;
+    expect(pending.heads.find((h: { id: string }) => h.id === ticket.id).pending).toBe('12500.50');
+    const a = await as('admin').post(`/vouchers/${c.body.id}/approve`);
+    expect(a.status).toBe(201);
+    expect(a.body.number).toBeGreaterThan(0);
+
+    const after = (await as('admin').get(`/reports/income/INTERNAL?fy=${fy}`)).body;
+    expect(after.heads.find((h: { id: string }) => h.id === ticket.id).received).toBe('12500.50');
+    expect(BigInt(after.totals.received.replace('.', '')) - BigInt(before.totals.received.replace('.', ''))).toBe(1250050n);
+    expect(after.vouchers[0]).toMatchObject({ receivedFrom: 'टिकट काउन्टर', receiptNo: 'R-101', status: 'APPROVED' });
+    expect(BigInt((await bankBalance()).replace('.', '')) - BigInt(bankBefore.replace('.', ''))).toBe(1250050n);
+    const sm = (await as('admin').get(`/reports/fund-summaries?fy=${fy}`)).body.find((s: { fund: { id: string } }) => s.fund.id === fund);
+    expect(sm.income).toBe('12500.50');
+    // Income is not budget expense.
+    const st = (await as('admin').get(`/reports/budget-statement/${fund}?fy=${fy}`)).body;
+    expect(st.rows.some((r: { accountId: string }) => r.accountId === ticket.id)).toBe(false);
+  });
+
+  test('accountant cannot add income heads; Super Admin must give the source', async () => {
+    expect((await as('lekha').post('/accounts', { kind: 'REVENUE', code: '14999', nameNe: 'x', nameEn: 'x', source: 'INTERNAL' })).status).toBe(403);
+    expect((await as('admin').post('/accounts', { kind: 'REVENUE', code: '14999', nameNe: 'x', nameEn: 'x' })).body.code).toBe('INCOME_SOURCE_REQUIRED');
+    const ok = await as('admin').post('/accounts', { kind: 'REVENUE', code: '14999', nameNe: 'नयाँ आम्दानी', nameEn: 'New income', source: 'INTERNAL' });
+    expect(ok.status).toBe(201);
+    expect(ok.body.source).toBe('INTERNAL');
+  });
+});
