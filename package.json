@@ -1,0 +1,12 @@
+{
+  "name": "pathibhara-accounts",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build:core": "npm run build -w @pa/core",
+    "test": "npm test -w @pa/core && npm test -w @pa/server",
+    "dev:server": "npm run start:dev -w @pa/server",
+    "dev:web": "npm run dev -w @pa/web"
+  }
+}

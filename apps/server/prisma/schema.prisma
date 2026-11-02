@@ -1,0 +1,425 @@
+// Pathibhara Area Development Committee — accounting database.
+// RULE: every BigInt column is an amount in PAISA. No other BigInt columns are allowed.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ACCOUNTANT
+  AUDITOR
+}
+
+enum FundSource {
+  INTERNAL // आन्तरिक
+  GRANT // अनुदान
+}
+
+enum Nature {
+  CAPITAL // पूँजीगत
+  RECURRENT // चालु
+}
+
+enum AccountKind {
+  EXPENSE
+  BANK
+  CASH
+  TDS_PAYABLE
+  ADVANCE
+  DEPOSIT
+  OTHER
+}
+
+enum Side {
+  DR
+  CR
+}
+
+enum VoucherType {
+  NORMAL // साधारण
+  ADJUSTMENT // समायोजन
+  REVERSAL // फिर्ता समायोजन
+}
+
+enum VoucherStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  CANCELLED // रद्द
+}
+
+enum VoucherMode {
+  PAYMENT
+  TAX_DEPOSIT
+  MANUAL
+}
+
+enum TdsRounding {
+  UP_RUPEE
+  NEAREST_RUPEE
+  DOWN_RUPEE
+  PAISA
+}
+
+enum BudgetEntryType {
+  APPROPRIATION // विनियोजन
+  TRANSFER // रकमान्तर (signed pair)
+  ADDITIONAL // थप बजेट
+  REDUCTION
+}
+
+model Organization {
+  id           String  @id @default(uuid())
+  code         String  @unique
+  nameNe       String
+  nameEn       String
+  govLevelNe   String // नेपाल सरकार / प्रदेश सरकार / स्थानीय तह
+  govLevelEn   String
+  ministryNe   String  @default("")
+  ministryEn   String  @default("")
+  officeCode   String  @default("")
+  addressNe    String  @default("")
+  addressEn    String  @default("")
+  districtNe   String  @default("")
+  districtEn   String  @default("")
+  pan          String  @default("")
+  logoPath     String?
+  licenseKey   String?
+  licenseUntil DateTime?
+
+  // Settings
+  tdsRounding        TdsRounding @default(UP_RUPEE)
+  vatRateBp          Int         @default(1300)
+  sessionIdleMinutes Int         @default(30)
+  accountsHeadName   String      @default("")
+  accountsHeadPost   String      @default("लेखा प्रमुख")
+  officeHeadName     String      @default("")
+  officeHeadPost     String      @default("कार्यालय प्रमुख")
+
+  createdAt DateTime @default(now())
+
+  users          User[]
+  fiscalYears    FiscalYear[]
+  funds          Fund[]
+  accounts       LedgerAccount[]
+  payees         Payee[]
+  taxRules       TaxRule[]
+  budgetSubHeads BudgetSubHead[]
+  vouchers       Voucher[]
+}
+
+model User {
+  id             String    @id @default(uuid())
+  orgId          String
+  org            Organization @relation(fields: [orgId], references: [id])
+  username       String    @unique
+  passwordHash   String
+  fullName       String
+  post           String    @default("")
+  role           Role
+  language       String    @default("ne")
+  active         Boolean   @default(true)
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sessions Session[]
+}
+
+model Session {
+  id        String   @id // sha256 of the bearer token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  lastSeen  DateTime @default(now())
+  ip        String   @default("")
+  userAgent String   @default("")
+  revoked   Boolean  @default(false)
+
+  @@index([userId])
+}
+
+model FiscalYear {
+  id        String   @id @default(uuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  code      String // "2082/83"
+  startYear Int
+  startBs   String
+  endBs     String
+  startAd   DateTime @db.Date
+  endAd     DateTime @db.Date
+  closed    Boolean  @default(false)
+
+  periodLocks PeriodLock[]
+
+  @@unique([orgId, code])
+}
+
+/// A locked BS month: no voucher may be created/approved with a date inside it.
+model PeriodLock {
+  id           String   @id @default(uuid())
+  fiscalYearId String
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
+  bsYear       Int
+  bsMonth      Int
+  lockedById   String
+  lockedAt     DateTime @default(now())
+
+  @@unique([fiscalYearId, bsYear, bsMonth])
+}
+
+model Fund {
+  id     String     @id @default(uuid())
+  orgId  String
+  org    Organization @relation(fields: [orgId], references: [id])
+  source FundSource
+  nature Nature
+  nameNe String
+  nameEn String
+
+  vouchers Voucher[]
+
+  @@unique([orgId, source, nature])
+}
+
+/// Chart of accounts: economic codes (expense heads) plus bank, cash, TDS and advance accounts.
+model LedgerAccount {
+  id         String      @id @default(uuid())
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id])
+  kind       AccountKind
+  code       String // economic code e.g. 22411 (several heads may share one code)
+  activityNo String      @default("") // क्रियाकलाप नं.: distinguishes heads under the same economic code
+  nameNe     String
+  nameEn     String
+  nature     Nature? // required for EXPENSE: capital heads only in पूँजीगत funds
+  folioNo    String      @default("") // खाता पाना नं.
+  bankName   String      @default("")
+  bankBranch String      @default("")
+  accountNo  String      @default("")
+  active     Boolean     @default(true)
+  sortOrder  Int         @default(0)
+
+  @@unique([orgId, kind, code, activityNo])
+}
+
+model BudgetSubHead {
+  id     String @id @default(uuid())
+  orgId  String
+  org    Organization @relation(fields: [orgId], references: [id])
+  code   String
+  nameNe String
+  nameEn String
+
+  @@unique([orgId, code])
+}
+
+/// Every change to a budget is a row; the appropriation of a head is the SUM of its rows.
+model BudgetEntry {
+  id            String          @id @default(uuid())
+  fiscalYearId  String
+  fundId        String
+  accountId     String
+  type          BudgetEntryType
+  amount        BigInt // signed paisa
+  transferGroup String?
+  note          String          @default("")
+  createdById   String
+  createdAt     DateTime        @default(now())
+
+  @@index([fiscalYearId, fundId, accountId])
+}
+
+/// मौज्दात जिम्मेवारी: opening balance of an account in a fund for a fiscal year (DR positive).
+model OpeningBalance {
+  id           String @id @default(uuid())
+  fiscalYearId String
+  fundId       String
+  accountId    String
+  dateBs       String
+  amount       BigInt
+
+  @@unique([fiscalYearId, fundId, accountId])
+}
+
+model Payee {
+  id            String  @id @default(uuid())
+  orgId         String
+  org           Organization @relation(fields: [orgId], references: [id])
+  name          String
+  pan           String  @default("")
+  vatRegistered Boolean @default(false)
+  payeeType     String  @default("FIRM") // FIRM | INDIVIDUAL | STAFF | GOVERNMENT | OTHER
+  defaultTaxCode String?
+  bankName      String  @default("")
+  bankBranch    String  @default("")
+  accountNo     String  @default("")
+  phone         String  @default("")
+  address       String  @default("")
+  active        Boolean @default(true)
+  createdAt     DateTime @default(now())
+
+  @@index([orgId, name])
+}
+
+/// TDS rate history. The rule used is the latest effectiveFromAd <= voucher date for the code.
+model TaxRule {
+  id              String   @id @default(uuid())
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id])
+  code            String // VAT_SUPPLIER, NON_VAT_FIRM, INDIVIDUAL_SERVICE, SALARY_SST, RENT, EXEMPT
+  nameNe          String
+  nameEn          String
+  rateBp          Int
+  excludeVat      Boolean  @default(false) // base = bill ÷ (1+VAT) when bill includes VAT
+  effectiveFromBs String
+  effectiveFromAd DateTime @db.Date
+  createdById     String?
+  createdAt       DateTime @default(now())
+
+  @@unique([orgId, code, effectiveFromAd])
+}
+
+model VoucherCounter {
+  fundId       String
+  fiscalYearId String
+  nextNumber   Int    @default(1)
+
+  @@id([fundId, fiscalYearId])
+}
+
+model Voucher {
+  id              String        @id @default(uuid())
+  orgId           String
+  org             Organization  @relation(fields: [orgId], references: [id])
+  fiscalYearId    String
+  fundId          String
+  fund            Fund          @relation(fields: [fundId], references: [id])
+  number          Int? // गो.भौ.नं. assigned on approval: sequential, gap-free
+  type            VoucherType   @default(NORMAL)
+  mode            VoucherMode   @default(MANUAL)
+  status          VoucherStatus @default(DRAFT)
+  dateBs          String
+  dateAd          DateTime      @db.Date
+  budgetSubHeadId String?
+  projectName     String        @default("")
+  eftRef          String        @default("")
+  narration       String
+  totalAmount     BigInt
+  budgetOverrideReason String?
+  reversalOfId    String?
+
+  preparedById  String
+  preparedAt    DateTime  @default(now())
+  submittedById String?
+  submittedAt   DateTime?
+  approvedById  String?
+  approvedAt    DateTime?
+  rejectComment String?
+  cancelledById String?
+  cancelledAt   DateTime?
+  cancelReason  String?
+  paidById      String? // भुक्तानी भएको: payment actually made from the bank
+  paidAt        DateTime?
+  paidRef       String?
+  version       Int       @default(1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  lines   VoucherLine[]
+  payees  VoucherPayee[]
+  attachments Attachment[]
+
+  @@unique([fundId, fiscalYearId, number])
+  @@index([fundId, fiscalYearId, status, dateAd])
+}
+
+model VoucherLine {
+  id          String      @id @default(uuid())
+  voucherId   String
+  voucher     Voucher     @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  lineNo      Int
+  side        Side
+  accountId   String
+  accountKind AccountKind
+  activityNo  String      @default("")
+  componentNo String      @default("")
+  src1Agency  String      @default("")
+  src1Method  String      @default("")
+  src2Agency  String      @default("")
+  src2Method  String      @default("")
+  amount      BigInt
+
+  @@index([accountId])
+}
+
+/// भुक्तानी प्रयोजनका लागि — also the source of the TDS register (by payee & PAN).
+model VoucherPayee {
+  id         String  @id @default(uuid())
+  voucherId  String
+  voucher    Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  sn         Int
+  payeeId    String?
+  name       String
+  pan        String  @default("")
+  bankName   String  @default("")
+  accountNo  String  @default("")
+  billNo     String  @default("")
+  billDateBs String  @default("")
+  gross      BigInt
+  vatIncluded Boolean @default(false)
+  taxCode    String?
+  taxRateBp  Int     @default(0)
+  tds        BigInt  @default(0)
+  tdsOverrideReason String?
+  net        BigInt // भुक्तानी रकम
+  eftRef     String  @default("")
+  /// the tax-deposit voucher that clears this TDS (set while that voucher is pending or approved)
+  depositVoucherId String?
+
+  @@index([payeeId])
+  @@index([depositVoucherId])
+}
+
+model Attachment {
+  id         String   @id @default(uuid())
+  voucherId  String
+  voucher    Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  kind       String // FORM_202 | FORM_202KA | BILL | QUOTATION | OTHER
+  fileName   String
+  mime       String
+  size       Int
+  sha256     String
+  path       String
+  uploadedById String
+  uploadedAt DateTime @default(now())
+}
+
+/// Append-only. A database trigger rejects UPDATE/DELETE/TRUNCATE (see migration).
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  orgId     String?
+  userId    String?
+  username  String   @default("")
+  action    String
+  entity    String
+  entityId  String   @default("")
+  ip        String   @default("")
+  userAgent String   @default("")
+  before    Json?
+  after     Json?
+  at        DateTime @default(now())
+  prevHash  String
+  hash      String
+
+  @@index([entity, entityId])
+  @@index([at])
+}

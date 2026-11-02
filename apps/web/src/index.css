@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Government-trustworthy palette: white surfaces, deep navy primary; red only for errors, green for success. */
+:root {
+  --bg: 246 248 251;
+  --surface: 255 255 255;
+  --muted: 241 244 248;
+  --border: 222 227 235;
+  --fg: 17 24 39;
+  --subtle: 92 103 120;
+  --primary: 23 52 110;
+  --primary-fg: 255 255 255;
+  --primary-soft: 230 236 248;
+  --danger: 190 30 45;
+  --danger-soft: 253 236 238;
+  --success: 22 128 72;
+  --success-soft: 230 246 237;
+  --warn: 176 105 0;
+  --warn-soft: 254 244 225;
+  /* chart categorical slots (validated: dataviz reference palette, light on #fff) */
+  --series-1: 42 120 214;
+  --series-2: 235 104 52;
+  --series-3: 27 175 122;
+  --series-4: 237 161 0;
+  color-scheme: light;
+}
+:root.dark {
+  --bg: 13 17 26;
+  --surface: 22 28 40;
+  --muted: 30 37 52;
+  --border: 48 57 76;
+  --fg: 230 234 242;
+  --subtle: 150 160 178;
+  --primary: 120 160 240;
+  --primary-fg: 10 16 30;
+  --primary-soft: 32 45 75;
+  --danger: 248 113 113;
+  --danger-soft: 60 24 28;
+  --success: 74 200 130;
+  --success-soft: 18 50 34;
+  --warn: 240 180 70;
+  --warn-soft: 58 42 14;
+  /* same hues stepped for the dark surface (validated on #161c28) */
+  --series-1: 57 135 229;
+  --series-2: 217 89 38;
+  --series-3: 25 158 112;
+  --series-4: 201 133 0;
+  color-scheme: dark;
+}
+
+html, body { background: rgb(var(--bg)); color: rgb(var(--fg)); }
+body { font-size: 15px; -webkit-font-smoothing: antialiased; }
+.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+/* Official-form tables (Form 203, cash book, statement): ruled like the paper books. */
+.form-table { border-collapse: collapse; width: 100%; }
+.form-table th, .form-table td { border: 1px solid rgb(var(--fg) / 0.55); padding: 4px 6px; vertical-align: top; }
+.form-table th { font-weight: 600; text-align: center; background: rgb(var(--muted)); }
+.form-table tfoot td, .form-table .total-row td { font-weight: 700; }
+
+.print-only { display: none; }
+@media print {
+  @page { size: A4; margin: 9mm 9mm 12mm; }
+  :root, :root.dark { --bg: 255 255 255; --surface: 255 255 255; --muted: 255 255 255; --fg: 0 0 0; --border: 0 0 0; --subtle: 60 60 60; }
+  body { font-size: 11px; background: #fff; color: #000; }
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+  .print-sheet { box-shadow: none !important; border: 0 !important; padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .form-table th { background: #fff; }
+  /* Official forms must fit the A4 width: no on-screen scroll boxes or minimum widths on paper. */
+  .print-sheet .overflow-x-auto { overflow: visible !important; }
+  .print-sheet table { min-width: 0 !important; width: 100%; }
+  .print-sheet .form-table th, .print-sheet .form-table td { padding: 2px 3px; }
+  .landscape { page: landscape; }
+  @page landscape { size: A4 landscape; }
+  .print-footer { position: fixed; bottom: 0; left: 0; right: 0; font-size: 9px; display: flex; justify-content: space-between; }
+}

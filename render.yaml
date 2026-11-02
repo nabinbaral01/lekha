@@ -1,0 +1,42 @@
+# One-click cloud deployment on Render (https://render.com) — gives a permanent public link
+# like https://pathibhara-accounts.onrender.com that works even when the office PC is off.
+# Region Singapore = closest to Nepal. Free plan: the site sleeps after ~15 min idle (first visit then
+# takes ~1 minute) and Render's free database expires after 30 days — fine for a DEMO, not for real accounts.
+services:
+  - type: web
+    name: pathibhara-accounts
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: >-
+      npm ci &&
+      npm run build:core &&
+      npm run build -w @pa/web &&
+      cd apps/server && npx prisma generate && npm run build
+    startCommand: >-
+      cd apps/server &&
+      npx prisma migrate deploy &&
+      npx ts-node --transpile-only prisma/seed-demo.ts &&
+      node dist/main.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pathibhara-db
+          property: connectionString
+      # Render asks you to type these when you first create the service (never commit real passwords).
+      # At least 8 characters with letters AND digits.
+      - key: DEMO_ADMIN_PASSWORD
+        sync: false
+      - key: DEMO_LEKHA_PASSWORD
+        sync: false
+      - key: DEMO_AUDITOR_PASSWORD
+        sync: false
+
+databases:
+  - name: pathibhara-db
+    plan: free
+    region: singapore
+    databaseName: pathibhara
