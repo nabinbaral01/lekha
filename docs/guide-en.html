@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pathibhara Accounting System — Complete Guide</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 18mm 15mm; }
+  :root { --ink:#1b2430; --sub:#5b6675; --line:#d9dee6; --soft:#f3f6fa; --pri:#1f4e8c; --pri-soft:#e6eefa; --ok:#1e7a4c; --ok-soft:#e5f4ec; --warn:#9a6200; --warn-soft:#fdf3e1; --bad:#b3261e; --bad-soft:#fbe9e7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", "Nirmala UI", "Noto Sans Devanagari", Arial, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.5; margin: 0; background:#fff; }
+  h1 { font-size: 20pt; color: var(--pri); margin: 0 0 6pt; page-break-after: avoid; }
+  h2 { font-size: 13.5pt; color: var(--pri); margin: 16pt 0 6pt; padding-bottom: 3pt; border-bottom: 1.5pt solid var(--pri-soft); page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 12pt 0 4pt; page-break-after: avoid; }
+  p { margin: 0 0 6pt; }
+  ul, ol { margin: 0 0 6pt; padding-left: 18pt; }
+  li { margin-bottom: 2pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 10pt; font-size: 9.5pt; page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+  th, td { border: 0.75pt solid var(--line); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: var(--soft); font-weight: 600; }
+  code, .mono { font-family: Consolas, "Cascadia Mono", monospace; font-size: 9pt; background: var(--soft); padding: 0 3pt; border-radius: 2pt; }
+  pre { font-family: Consolas, monospace; font-size: 8.8pt; background: var(--soft); border: 0.75pt solid var(--line); padding: 6pt 8pt; border-radius: 4pt; white-space: pre-wrap; page-break-inside: avoid; }
+  .chapter { page-break-before: always; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .note, .warn, .ok { border-left: 3pt solid; padding: 5pt 8pt; margin: 6pt 0 10pt; border-radius: 0 4pt 4pt 0; page-break-inside: avoid; }
+  .note { border-color: var(--pri); background: var(--pri-soft); }
+  .warn { border-color: var(--warn); background: var(--warn-soft); }
+  .ok { border-color: var(--ok); background: var(--ok-soft); }
+  .muted { color: var(--sub); }
+  /* flow diagrams */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 6pt 0 12pt; page-break-inside: avoid; }
+  .step { flex: 1 1 0; min-width: 0; border: 1pt solid var(--pri); background: var(--pri-soft); border-radius: 5pt; padding: 5pt 6pt; font-size: 9pt; text-align: center; }
+  .step b { display: block; font-size: 9.5pt; color: var(--pri); }
+  .arrow { flex: 0 0 14pt; display: flex; align-items: center; justify-content: center; color: var(--pri); font-weight: 700; font-size: 12pt; }
+  .step.ok { border-color: var(--ok); background: var(--ok-soft); } .step.ok b { color: var(--ok); }
+  .step.bad { border-color: var(--bad); background: var(--bad-soft); } .step.bad b { color: var(--bad); }
+  .step.warn { border-color: var(--warn); background: var(--warn-soft); } .step.warn b { color: var(--warn); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+  .box { border: 0.75pt solid var(--line); border-radius: 5pt; padding: 6pt 8pt; page-break-inside: avoid; }
+  .box h4 { margin: 0 0 3pt; font-size: 10pt; color: var(--pri); }
+  /* cover */
+  .cover { height: 255mm; display: flex; flex-direction: column; justify-content: center; }
+  .cover .badge { display:inline-block; width: 46pt; height: 46pt; border-radius: 12pt; background: var(--pri); color:#fff; font-size: 22pt; font-weight: 700; text-align:center; line-height: 46pt; margin-bottom: 14pt; }
+  .cover h1 { font-size: 28pt; }
+  .cover .sub { font-size: 14pt; color: var(--sub); margin-bottom: 24pt; }
+  .toc { columns: 2; column-gap: 18pt; font-size: 10pt; }
+  .toc li { break-inside: avoid; }
+  .tree { font-family: Consolas, monospace; font-size: 9pt; white-space: pre; background: var(--soft); border: 0.75pt solid var(--line); border-radius: 4pt; padding: 6pt 8pt; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ═════════════════════════════ COVER ═════════════════════════════ -->
+<section class="cover">
+  <div><span class="badge">P</span></div>
+  <h1>Pathibhara Accounting System</h1>
+  <div class="sub">Complete Guide: Workflow, Features, Rules and Technical Design<br>Pathibhara Area Development Committee, Taplejung</div>
+  <table style="width:auto">
+    <tr><th>Who this is for</th><td>Office head (Super Admin), accountant, auditor, and any developer who maintains the code</td></tr>
+    <tr><th>System version</th><td>Phase 1 + Income, commit <span class="mono">bda80d2</span></td></tr>
+    <tr><th>Fiscal year set up</th><td>FY 2082/83 (2082.04.01 to 2083.03.end)</td></tr>
+    <tr><th>Source code</th><td>github.com/nabinbaral01/lekha</td></tr>
+  </table>
+  <h3>Contents</h3>
+  <ol class="toc">
+    <li>What the system does: the one big idea</li>
+    <li>Users and what each one can do</li>
+    <li>Starting, stopping and sharing the site</li>
+    <li>Map of every screen</li>
+    <li>First-time setup (Super Admin)</li>
+    <li>Daily work: entering a payment voucher</li>
+    <li>Voucher life: draft → submit → approve → paid</li>
+    <li>Tax deducted at source (TDS) and tax deposit</li>
+    <li>Income</li>
+    <li>Books and reports produced automatically</li>
+    <li>Monthly and year-end routine</li>
+    <li>Every safety rule and error message</li>
+    <li>Audit trail and security</li>
+    <li>Technical design (for developers)</li>
+    <li>Database tables</li>
+    <li>API reference</li>
+    <li>Testing</li>
+    <li>Troubleshooting</li>
+    <li>What is still to be built, and what must be verified</li>
+  </ol>
+</section>
+
+<!-- ═════════════════════════════ 1 ═════════════════════════════ -->
+<section class="chapter">
+<h1>1. What the system does: the one big idea</h1>
+<p>This is a cash-basis government accounting system that follows the Auditor General (FCGO) formats. It replaces the paper books the office keeps today.</p>
+<div class="ok"><b>The golden rule: enter each transaction once.</b> Every transaction is entered once, as a <b>journal voucher (Form 203)</b>. When the office head approves it, the system writes it into <b>every book automatically</b>: the bank-cash book, the budget statement, the tax register, the income report, the dashboard charts and the audit log. No book is typed separately, so the books can never disagree with each other.</div>
+
+<h3>The four funds</h3>
+<p>Money is kept in four separate funds. Every voucher belongs to exactly one fund.</p>
+<table>
+  <tr><th></th><th>Capital: assets, construction, purchases</th><th>Recurrent: operations, services, programmes</th></tr>
+  <tr><th>Internal: the committee's own revenue</th><td>Internal – Capital</td><td>Internal – Recurrent</td></tr>
+  <tr><th>Grant: money from government or other bodies</th><td>Grant – Capital</td><td>Grant – Recurrent</td></tr>
+</table>
+<p>The four funds share <b>one real bank account</b>. The system tracks each fund's share of it and never lets the total bank balance go below zero.</p>
+
+<h3>How a transaction flows</h3>
+<div class="flow">
+  <div class="step"><b>1. Enter</b>Accountant fills Form 203</div><div class="arrow">→</div>
+  <div class="step"><b>2. Check</b>System checks every rule</div><div class="arrow">→</div>
+  <div class="step"><b>3. Submit</b>Sent to office head</div><div class="arrow">→</div>
+  <div class="step ok"><b>4. Approve</b>Gets voucher no.</div><div class="arrow">→</div>
+  <div class="step ok"><b>5. Books</b>All books update by themselves</div>
+</div>
+
+<h3>Main features at a glance</h3>
+<div class="grid2">
+  <div class="box"><h4>Entry</h4>Form 203 voucher (easy payment mode or full debit/credit mode), income entry, tax deposit voucher, payee register, budget sub-heads.</div>
+  <div class="box"><h4>Control</h4>Approval workflow, budget check, bank-balance check, period locks, date-order numbering, duplicate-bill warning, role permissions.</div>
+  <div class="box"><h4>Books</h4>Bank-Cash Book (per fund and consolidated), Budget Statement, TDS pending list, income by source, dashboards with charts.</div>
+  <div class="box"><h4>Trust</h4>Tamper-proof audit log (hash-chained and blocked from editing at database level), exact money (paisa, no rounding errors), Nepali/English, Nepali dates (BS).</div>
+</div>
+</section>
+
+<!-- ═════════════════════════════ 2 ═════════════════════════════ -->
+<section class="chapter">
+<h1>2. Users and what each one can do</h1>
+<p>There are three roles. Every login belongs to one role, and the server checks the role on every action, so hiding a button is never the only protection.</p>
+<table>
+  <tr><th>Action</th><th>Super Admin<br><span class="muted">(Office Head)</span></th><th>Accountant</th><th>Auditor</th></tr>
+  <tr><td>See all funds, vouchers, books, reports, charts</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+  <tr><td>Print vouchers and books</td><td>Yes</td><td>Yes</td><td>Yes (logged)</td></tr>
+  <tr><td>Create and edit draft vouchers, income entries, payees</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Submit a voucher for approval</td><td>Yes</td><td>Yes (own vouchers)</td><td>No</td></tr>
+  <tr><td>Cancel a draft or submitted voucher</td><td>Yes</td><td>Yes (own vouchers)</td><td>No</td></tr>
+  <tr><td><b>Approve or reject</b> a voucher</td><td><b>Yes (only this role)</b></td><td>No</td><td>No</td></tr>
+  <tr><td>Approve spending above budget (with written reason)</td><td>Yes</td><td>No</td><td>No</td></tr>
+  <tr><td>Mark a voucher as paid</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Settings: organisation, budget, heads, sub-heads, users, tax rates, opening balance, voucher numbering, month locks</td><td>Yes</td><td>No</td><td>No</td></tr>
+  <tr><td>Consolidated cash book (all four funds)</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+  <tr><td>Audit log and tamper check</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+</table>
+<h3>Demo logins</h3>
+<table style="width:auto">
+  <tr><th>Username</th><th>Password</th><th>Role</th></tr>
+  <tr><td>admin</td><td class="mono">Admin12345</td><td>Super Admin</td></tr>
+  <tr><td>lekha</td><td class="mono">Lekha12345</td><td>Accountant</td></tr>
+  <tr><td>auditor</td><td class="mono">Audit12345</td><td>Auditor</td></tr>
+</table>
+<div class="warn"><b>Login safety.</b> After <b>5 wrong passwords</b> an account is locked for <b>30 minutes</b>. A session also ends by itself after <b>30 minutes without activity</b> (changeable in Settings). Change all demo passwords before entering real office data.</div>
+</section>
+
+<!-- ═════════════════════════════ 3 ═════════════════════════════ -->
+<section class="chapter">
+<h1>3. Starting, stopping and sharing the site</h1>
+<p>The project folder <span class="mono">C:\chetra 2</span> has three double-click files:</p>
+<table>
+  <tr><th>File</th><th>What it does</th></tr>
+  <tr><td><b>start.bat</b></td><td>Starts the website and its own database (one minimised window called "Pathibhara Accounts – do not close"). It waits until the site answers, then opens <span class="mono">http://localhost:3000</span> in the browser.</td></tr>
+  <tr><td><b>share.bat</b></td><td>Creates a free public link (<span class="mono">https://….trycloudflare.com</span>) so anyone on the internet can open the site. It prints the link and copies it to the clipboard. The link works only while this PC is on, connected, and the window stays open. A new link is made every time.</td></tr>
+  <tr><td><b>stop.bat</b></td><td>Stops the share link, the website and the database.</td></tr>
+</table>
+<h3>Ways to reach the site</h3>
+<table>
+  <tr><th>Who</th><th>Address</th></tr>
+  <tr><td>On the same PC</td><td class="mono">http://localhost:3000</td></tr>
+  <tr><td>Other PCs in the office (same network)</td><td class="mono">http://&lt;this-PC-name&gt;:3000</td></tr>
+  <tr><td>Anyone on the internet</td><td>The link printed by share.bat</td></tr>
+  <tr><td>Permanent cloud link (optional)</td><td>Render.com using the ready-made <span class="mono">render.yaml</span>. It works even when the PC is off. The free plan sleeps after 15 minutes idle, and its free database expires after 30 days.</td></tr>
+</table>
+<div class="note">Keep the office PC from sleeping (Windows Settings → System → Power → Sleep: Never) while it acts as the server.</div>
+</section>
+
+<!-- ═════════════════════════════ 4 ═════════════════════════════ -->
+<section class="chapter">
+<h1>4. Map of every screen</h1>
+<p>Navigation goes <b>Home → Internal/Grant → Capital / Recurrent / Income</b>, and then the tabs inside a fund.</p><table><tr><th>Screen</th><th>Menu label</th><th>What it shows / does</th><th>Who</th></tr><tr><td>Home</td><td>Home</td><td>Summary tiles (shared bank balance, awaiting approval, TDS to deposit, days left in FY), spending-by-fund chart, and the Internal / Grant cards</td><td>All</td></tr><tr><td>Source page</td><td>Internal or Grant</td><td>Three cards: Capital expenditure, Recurrent expenditure, Income</td><td>All</td></tr><tr><td>Fund → dashboard</td><td>Dashboard</td><td>Budget, spent, remaining, status counts, money-flow chart</td><td>All</td></tr><tr><td>Fund → new voucher</td><td>Voucher Entry</td><td>Form 203 entry (easy payment or debit/credit mode)</td><td>Admin, Accountant</td></tr><tr><td>Fund → voucher list</td><td>Voucher List</td><td>Search, filter by status, open a voucher to print / submit / approve / reject / cancel / mark paid</td><td>All</td></tr><tr><td>Fund → cash book</td><td>Bank-Cash Book</td><td>Bank-cash book with running balances and monthly totals</td><td>All</td></tr><tr><td>Fund → tax</td><td>Tax (TDS)</td><td>Pending tax and the tax deposit voucher</td><td>All (create: Admin, Accountant)</td></tr><tr><td>Fund → budget statement</td><td>Budget Statement</td><td>Allocated / spent / saving per head</td><td>All</td></tr><tr><td>Fund → next phase</td><td>Budget Ledger · Advance · Reports</td><td>Placeholders for coming features</td><td>All</td></tr><tr><td>Income</td><td>Income</td><td>Income by head, new income entry, income voucher list</td><td>All (entry: Admin, Accountant)</td></tr><tr><td>Consolidated</td><td>All funds (consolidated)</td><td>Cash book of all four funds together: the true bank balance</td><td>Admin, Auditor</td></tr><tr><td>Audit</td><td>Audit Trail</td><td>Every action logged, with a tamper check</td><td>Admin, Auditor</td></tr><tr><td>Settings</td><td>Settings</td><td>Organisation · Budget sub-heads · Budget · Opening balances · Voucher numbering · Period locks · Users · Tax rates · Accounts / heads · Payees (details in chapter 5)</td><td>Admin</td></tr><tr><td>Top bar</td><td>—</td><td>Fiscal year · Nepali/English · Devanagari/Latin digits · light/dark theme · logout</td><td>All</td></tr></table>
+</section>
+
+<!-- ═════════════════════════════ 5 ═════════════════════════════ -->
+<section class="chapter">
+<h1>5. First-time setup (Super Admin)</h1>
+<p>Do these once, in this order, before the accountant starts entering vouchers. Everything is under <b>Settings</b>.</p>
+<table>
+  <tr><th>#</th><th>Tab</th><th>What to enter</th><th>Why it matters</th></tr>
+  <tr><td>1</td><td>Organisation</td><td>Office name, government level, ministry, office code, PAN, address, the names and posts of the Accounts Head and Office Head</td><td>Printed on Form 203, the cash book and statements</td></tr>
+  <tr><td>2</td><td>Accounts / heads</td><td>Check the expense heads (code, activity no., name, Capital/Recurrent) and the income heads (code, Internal/Grant). Add the bank account name, branch and number.</td><td>48 expense heads and 11 income heads are pre-loaded with <b>provisional</b> codes. Correct them before first use; a head's code is frozen once a voucher uses it.</td></tr>
+  <tr><td>3</td><td>Budget sub-heads</td><td>Budget sub-head numbers and names from the red book (budget estimate)</td><td>Chosen on each voucher</td></tr>
+  <tr><td>4</td><td>Budget</td><td>Appropriation per head per fund. Later changes are added as: additional budget, reduction, or transfer between heads</td><td>Each change is a separate row with a note, so the history is kept. The budget of a head is the sum of its rows.</td></tr>
+  <tr><td>5</td><td>Opening balances</td><td>Opening bank and cash balance of each fund on 2082.04.01</td><td>The first row of the cash book. Cannot be changed once any voucher is approved.</td></tr>
+  <tr><td>6</td><td>Voucher numbering</td><td>If paper books already reached, say, voucher 159, set the next number to 160</td><td>Can be set only once, before the first approval</td></tr>
+  <tr><td>7</td><td>Users</td><td>Create real users, give roles, set strong passwords, deactivate demo users</td><td>Approval rights depend on role</td></tr>
+  <tr><td>8</td><td>Tax rates</td><td>Confirm TDS rates (have a Chartered Accountant check them)</td><td>A new rate is added with an effective date; old vouchers keep the old rate</td></tr>
+  <tr><td>9</td><td>Payees</td><td>Register regular suppliers with PAN (9 digits), VAT status and bank account</td><td>Needed for TDS, EFT and the tax register</td></tr>
+</table>
+</section>
+
+<!-- ═════════════════════════════ 6 ═════════════════════════════ -->
+<section class="chapter">
+<h1>6. Daily work: entering a payment voucher</h1>
+<p>Go to <b>Home → Internal or Grant → Capital or Recurrent → Voucher Entry</b>. There are two modes.</p>
+
+<h3>A. Simple payment (easy payment mode): used for almost everything</h3>
+<ol>
+  <li><b>Date</b> in BS, format <span class="mono">YYYY.MM.DD</span>. It must be inside the open fiscal year and in an unlocked month.</li>
+  <li><b>Budget sub-head</b> and project name (optional).</li>
+  <li><b>Expense head</b>: the list shows only heads of this fund's type (capital heads in Capital funds, recurrent heads in Recurrent funds) and the <b>remaining budget</b> next to each. The folio no. and activity no. fill in automatically from the head.</li>
+  <li><b>Payee</b>: pick from the register or add a new one on the spot.</li>
+  <li><b>Bill amount, bill number, bill date</b>. Tick <i>"Bill includes 13% VAT"</i> if the bill includes VAT. This is allowed only for VAT-registered payees.</li>
+  <li><b>Tax type</b>: the system calculates TDS and the net payment instantly (see chapter 8). To change the TDS, tick "Override TDS" and write a reason.</li>
+  <li>Several payees can be added to one voucher.</li>
+  <li><b>Payment method</b>: EFT (needs the payee's bank account) or cheque.</li>
+  <li><b>Narration</b>: a short description is required.</li>
+  <li><b>Preview</b> shows the exact Form 203 as it will print. Then <b>save as draft</b> or <b>submit</b>.</li>
+</ol>
+<p>The system builds the accounting lines itself:</p>
+<pre>Dr  Expense head ............ bill amount (gross)
+    Cr  Bank ................ net payment (bill − TDS)
+    Cr  TDS payable ......... tax withheld</pre>
+
+<h3>B. Debit/Credit (advanced mode)</h3>
+<p>For adjustments and unusual entries, the accountant writes each Dr/Cr line by hand, with the source columns (paying agency, payment method). Total debit must equal total credit, and the screen shows the difference live.</p>
+
+<h3>Warnings you may see while entering</h3>
+<ul>
+  <li><b>Possible duplicate bill:</b> the same payee and bill number already exist, or the same payee and amount on the same day. You must tick "I have checked, this is not a duplicate" to continue.</li>
+  <li><b>Budget will be exceeded:</b> shown at submit. Only the Super Admin can approve it, and only with a written reason, which is recorded.</li>
+</ul>
+<h3>Printing Form 203</h3>
+<p>Open the voucher and press <b>Print</b>. The page is an exact copy of the paper Auditor General Form No. 203 on one A4 sheet, including the purpose and how-to-fill instructions text, the amount in words, and the signature blocks with names and BS dates. Each print is recorded in the audit log.</p>
+</section>
+
+<!-- ═════════════════════════════ 7 ═════════════════════════════ -->
+<section class="chapter">
+<h1>7. Voucher life: draft → submit → approve → paid</h1>
+<div class="flow">
+  <div class="step"><b>Draft</b>Saved, editable, no number</div><div class="arrow">→</div>
+  <div class="step warn"><b>Submitted</b>Waiting for office head</div><div class="arrow">→</div>
+  <div class="step ok"><b>Approved</b>Number given; in all books; locked</div><div class="arrow">→</div>
+  <div class="step ok"><b>Paid</b>Payment made; EFT/cheque no. noted</div>
+</div>
+<div class="flow">
+  <div class="step warn"><b>Sent back</b>Head sends it back with a comment → returns to DRAFT for correction</div><div class="arrow"> </div>
+  <div class="step bad"><b>Cancelled</b>Allowed only before approval, with a reason. It stays visible in the list as Cancelled and is never deleted.</div>
+</div>
+
+<h3>What happens at each step</h3>
+<table>
+  <tr><th>Step</th><th>Who</th><th>What the system checks or does</th></tr>
+  <tr><td>Save draft</td><td>Accountant / Admin</td><td>All structural rules (dates, heads, PAN, Dr = Cr, VAT rules, duplicate warning). A draft can be edited any number of times.</td></tr>
+  <tr><td>Submit</td><td>The person who prepared it (or Admin)</td><td>The month must be open. The <b>budget check</b> runs: if any head would go over budget it stops, unless the Super Admin gives a reason.</td></tr>
+  <tr><td>Approve</td><td><b>Super Admin only</b></td><td>
+    1. Only one approval at a time runs for the whole office, so numbers and balances never clash.<br>
+    2. Date order: a voucher cannot be approved with a date earlier than the last approved voucher of that fund, so numbers stay in date order.<br>
+    3. The budget check is repeated.<br>
+    4. Bank check: the shared bank account (all four funds together) can never go negative.<br>
+    5. For a tax deposit voucher, the amount must equal the TDS rows it clears.<br>
+    6. Gives the next <b>voucher no.</b> for that fund and year: sequential, gap-free, never reused.<br>
+    7. From now on the voucher appears in every book.</td></tr>
+  <tr><td>Reject</td><td>Super Admin</td><td>Comment required. The voucher goes back to DRAFT with the comment shown at the top.</td></tr>
+  <tr><td>Cancel</td><td>Preparer / Admin</td><td>Only DRAFT or SUBMITTED. Reason required. An approved voucher can never be cancelled or edited; a correction is made with a new adjustment (adjustment) voucher.</td></tr>
+  <tr><td>Mark paid</td><td>Accountant / Admin</td><td>Records that the bank payment was actually made, with the EFT/cheque reference.</td></tr>
+</table>
+<div class="note">Two people editing the same voucher at once is detected: the second save is refused with "someone changed this voucher, reload" (version check), so no change is silently lost.</div>
+</section>
+
+<!-- ═════════════════════════════ 8 ═════════════════════════════ -->
+<section class="chapter">
+<h1>8. Tax deducted at source (TDS) and tax deposit</h1>
+<h3>How the tax is calculated</h3>
+<ol>
+  <li>If the bill includes 13% VAT, the taxable base = bill ÷ 1.13. Otherwise the base = bill.</li>
+  <li>TDS = base × rate of the chosen tax type. The rate used is the one <b>in force on the voucher date</b>.</li>
+  <li>Rounding follows the office setting. The default is <b>up to the next whole rupee</b>, which matches the client's books.</li>
+  <li>Net payment = bill − TDS.</li>
+</ol>
+<p>All of this uses exact fractions, never decimals, so there is never a one-paisa error.</p>
+<table>
+  <tr><th>Tax type (default rates: verify with a CA)</th><th class="num">Rate</th><th>Base</th></tr>
+  <tr><td>VAT-registered supplier/service (VAT_SUPPLIER)</td><td class="num">1.5%</td><td>amount excluding VAT</td></tr>
+  <tr><td>Non-VAT bill (registered firm) (NON_VAT_FIRM)</td><td class="num">1.5%</td><td>bill</td></tr>
+  <tr><td>Service/consultancy fee to an individual (INDIVIDUAL_SERVICE)</td><td class="num">15%</td><td>bill</td></tr>
+  <tr><td>Salary/wages social security tax (SALARY_SST)</td><td class="num">1%</td><td>bill</td></tr>
+  <tr><td>House / vehicle rent (RENT)</td><td class="num">10%</td><td>bill</td></tr>
+  <tr><td>Exempt (EXEMPT)</td><td class="num">0%</td><td>reason required</td></tr>
+</table>
+<h3>Worked example: the client's voucher 160</h3>
+<pre>VAT bill (Consultancy services) ................  79,100.00
+Base = 79,100 ÷ 1.13 ....................  70,000.00
+TDS  = 70,000 × 1.5% ....................   1,050.00
+Net payment .............................  78,050.00
+
+Lines:  Dr Consultancy services 79,100 | Cr Bank 78,050 | Cr TDS payable 1,050
+Bank: 5,03,09,038.73 (opening) − 78,050 = 5,02,30,988.73  ✔ matches the paper cash book</pre>
+
+<h3>Depositing the tax (tax deposit)</h3>
+<div class="flow">
+  <div class="step"><b>1. Tax (TDS) tab</b>List of approved tax not yet deposited</div><div class="arrow">→</div>
+  <div class="step"><b>2. Tick rows</b>Choose what to deposit now</div><div class="arrow">→</div>
+  <div class="step"><b>3. Create voucher</b>Dr TDS payable / Cr Bank</div><div class="arrow">→</div>
+  <div class="step ok"><b>4. Approve</b>Rows marked deposited; pending total falls</div>
+</div>
+<p>A row being deposited cannot be picked twice. If the deposit voucher is rejected or cancelled, the rows return to the pending list.</p>
+</section>
+
+<!-- ═════════════════════════════ 9 ═════════════════════════════ -->
+<section class="chapter">
+<h1>9. Income</h1>
+<p>Go to <b>Home → Internal or Grant → Income</b> (the green card). The page has three parts:</p>
+<ol>
+  <li><b>Income by source:</b> every income head of that source with the amount received (approved), the amount awaiting approval, a share bar and the total.</li>
+  <li><b>New income entry:</b> the entry form.</li>
+  <li><b>Income vouchers:</b> every income voucher with its number, date, head, payer, receipt number, fund and status. Click the number to open or print it as Form 203.</li>
+</ol>
+<h3>Income heads loaded (provisional codes)</h3>
+<div class="grid2">
+  <div class="box"><h4>Internal (own revenue)</h4>14211 Entry / ticket fee · 14213 Hotel, lodge & shop rent · 14212 Service fee · 14229 Parking fee · 14311 Donations & offerings · 14111 Bank interest · 14529 Miscellaneous income</div>
+  <div class="box"><h4>Grant (grants)</h4>13311 Federal government grant · 13312 Provincial government grant · 13313 Local government grant · 13314 Other agency / donor grant</div>
+</div>
+<p>The Super Admin can add more under <b>Settings → Accounts / heads</b>: choose type <b>REVENUE</b> and pick Internal or Grant.</p>
+<h3>Entering income</h3>
+<ol>
+  <li>Date, and fund: which fund (Recurrent or Capital) the money is for.</li>
+  <li>Income head: only heads of this source are listed.</li>
+  <li>Amount; and where it went: Bank account or Cash.</li>
+  <li>Received from (person/body) is required; Receipt no. is optional.</li>
+  <li>Narration: if left empty, it becomes "Amount received for &lt;head&gt;".</li>
+  <li><b>Submit</b> creates and submits it. The office head approves it like any voucher and it gets the next voucher no. of that fund.</li>
+</ol>
+<pre>Dr  Bank (or Cash) .......... amount
+    Cr  Income head ......... amount</pre>
+<ul>
+  <li>Once approved, the bank balance in the cash book rises. The income is <b>not</b> counted as spending in the Budget Statement.</li>
+  <li>The fund's chart shows an extra "Income" line.</li>
+  <li>A Grant head cannot be used in an Internal fund, and the other way round. The system blocks it.</li>
+  <li>On the printed Form 203 the payer and receipt number are added to the narration, and the payment table stays empty (nobody is paid).</li>
+</ul>
+</section>
+
+<!-- ═════════════════════════════ 10 ═════════════════════════════ -->
+<section class="chapter">
+<h1>10. Books and reports produced automatically</h1>
+<p>Every book below is <b>calculated</b> from approved vouchers each time it is opened, so it is never stored separately and never goes out of date. Each book has a date range filter (from/to, BS) and prints on A4.</p>
+<h3>Bank-Cash Book</h3>
+<table>
+  <tr><th>Column</th><th>Filled from</th></tr>
+  <tr><td>Date, voucher no., description, cheque no.</td><td>Voucher date, number, narration, EFT/cheque reference</td></tr>
+  <tr><td>Cash: debit / credit / balance</td><td>Lines on the cash account, with running balance</td></tr>
+  <tr><td>Bank: debit / credit / balance</td><td>Lines on the bank account, with running balance</td></tr>
+  <tr><td>Budget expense</td><td>Net of expense-head lines</td></tr>
+  <tr><td>Advance: given / settled</td><td>Advance account lines</td></tr>
+  <tr><td>Miscellaneous: debit / credit</td><td>Everything else (TDS payable, income heads, deposits)</td></tr>
+</table>
+<p>It starts with the <b>opening balance</b> row, and for each month shows <b>month total</b> and <b>balance carried forward</b>, then the yearly total and closing balance. The <b>consolidated</b> version  merges all four funds and shows the true balance of the one shared bank account.</p>
+<h3>Budget Statement</h3>
+<p>For each head: <b>allocated</b> (sum of all budget rows) − <b>spent</b> (approved spending) = <b>saving</b>. Saving is always calculated, never typed.</p>
+<h3>Dashboards and charts</h3>
+<ul>
+  <li><b>Home:</b> shared bank balance, vouchers awaiting approval, TDS to deposit, days left in the year. Each source card shows its budget, spending and %. The chart shows spending per fund.</li>
+  <li><b>Fund dashboard:</b> budget, spent, remaining, counts by status, rejected vouchers. The money-flow chart has lines for budget expense, bank payment, TDS and income. You can view it by month for the whole year, by week for one month, or as cumulative spending against the budget line. Every chart also has a table view.</li>
+  <li><b>Source page:</b> capital, recurrent and income cards with totals.</li>
+</ul>
+<h3>Acceptance check against the client's paper books</h3>
+<p>The client's figures were entered and every running balance matched to the paisa (opening 5,03,09,038.73; V160 → 5,02,30,988.73; V161 → 5,02,29,938.73; V162 → 4,97,83,480.73 …). These are kept as automatic tests (chapter 17).</p>
+</section>
+
+<!-- ═════════════════════════════ 11 ═════════════════════════════ -->
+<section class="chapter">
+<h1>11. Monthly and year-end routine</h1>
+<h3>Every day</h3>
+<ul><li>Accountant enters and submits vouchers and income. The head approves or rejects them from the Voucher List (filter "Submitted"). After paying, mark vouchers Paid.</li></ul>
+<h3>Every month</h3>
+<ol>
+  <li>Check that no voucher of the month is still DRAFT or SUBMITTED.</li>
+  <li>Deposit the month's TDS from the Tax (TDS) tab.</li>
+  <li>Print the month's cash book page and compare the bank balance with the bank statement.</li>
+  <li><b>Lock the month</b> (Settings → Period locks). After locking, nobody can create, submit or approve a voucher dated in that month. Only the Super Admin can unlock it, and both actions are logged.</li>
+</ol>
+<h3>Year end (Ashadh end)</h3>
+<ol>
+  <li>Clear all drafts and pending vouchers. The year cannot be closed while any remain.</li>
+  <li>Print the yearly cash book, Budget Statement and audit log.</li>
+  <li>Create the next fiscal year and enter its opening balance (the closing balance of this year).</li>
+  <li>Close the old year.</li>
+</ol>
+</section>
+
+<!-- ═════════════════════════════ 12 ═════════════════════════════ -->
+<section class="chapter">
+<h1>12. Every safety rule and error message</h1>
+<p>All rules run on the server, whatever screen or tool is used. The messages appear in Nepali or English.</p>
+<table>
+  <tr><th>Rule</th><th>When it stops you</th></tr>
+  <tr><td>Debit = Credit</td><td>Totals differ on any voucher</td></tr>
+  <tr><td>Amounts positive</td><td>Zero or negative line amount (also enforced inside the database)</td></tr>
+  <tr><td>Budget</td><td>Spending would exceed the head's remaining budget; only the Super Admin may override, with a reason of at least 5 characters</td></tr>
+  <tr><td>Bank never negative</td><td>Approval would take the shared bank (or cash) below zero</td></tr>
+  <tr><td>Head type</td><td>Capital head in a Recurrent fund or recurrent head in a Capital fund</td></tr>
+  <tr><td>Income source</td><td>Grant income head in an Internal fund or the other way round</td></tr>
+  <tr><td>Date</td><td>Invalid BS date, a date outside an open fiscal year, or a date in a locked month</td></tr>
+  <tr><td>Date order</td><td>Approving a voucher dated before the fund's last approved voucher</td></tr>
+  <tr><td>PAN</td><td>Not exactly 9 digits</td></tr>
+  <tr><td>EFT</td><td>Payee has no bank account</td></tr>
+  <tr><td>VAT</td><td>VAT ticked for a payee not registered for VAT</td></tr>
+  <tr><td>TDS change / exemption</td><td>No reason given; changed TDS below 0 or above the bill</td></tr>
+  <tr><td>Duplicate</td><td>Same payee and bill no., or same payee and amount on the same day (needs confirmation)</td></tr>
+  <tr><td>Narration</td><td>Empty narration</td></tr>
+  <tr><td>Approved = final</td><td>Editing or cancelling an approved voucher</td></tr>
+  <tr><td>Head in use</td><td>Changing the code or type of a head or sub-head already used in a voucher (the name can still be corrected)</td></tr>
+  <tr><td>Opening balance</td><td>Changing it after any approval; an opening balance on an expense or income head</td></tr>
+  <tr><td>Database down</td><td>"Database is not running": restart with start.bat (the server also restarts its database by itself every 10 seconds)</td></tr>
+</table>
+</section>
+
+<!-- ═════════════════════════════ 13 ═════════════════════════════ -->
+<section class="chapter">
+<h1>13. Audit trail and security</h1>
+<ul>
+  <li><b>Everything is logged:</b> logins (including failed ones), creating, editing, submitting, approving, rejecting, cancelling and printing vouchers, and every settings change. Each entry records who, when, from which computer, and the data before and after.</li>
+  <li><b>Nobody can change the log.</b> A database trigger blocks UPDATE, DELETE and TRUNCATE on the log table, even for the database administrator or a bug in the program.</li>
+  <li><b>Tamper check:</b> each entry stores a fingerprint (SHA-256 hash) of itself plus the previous entry, forming a chain. <b>Audit Trail → Verify</b> recomputes the chain and shows either "intact" or the exact entry that was altered.</li>
+  <li><b>Passwords</b> are stored only as bcrypt hashes. Login tokens are stored as SHA-256 hashes, so a stolen database cannot be used to log in.</li>
+  <li><b>Auditor</b> is read-only everywhere; the server refuses any change from that role.</li>
+  <li><b>Money</b> is stored as whole paisa (BIGINT). There are no floating-point numbers anywhere, so totals are always exact.</li>
+</ul>
+</section>
+
+<!-- ═════════════════════════════ 14 ═════════════════════════════ -->
+<section class="chapter">
+<h1>14. Technical design (for developers)</h1>
+<h3>Technology</h3>
+<table>
+  <tr><th>Layer</th><th>Technology</th></tr>
+  <tr><td>Browser app</td><td>React 18 + TypeScript, Vite, Tailwind CSS, TanStack Query, react-router, react-i18next (ne/en), offline fonts</td></tr>
+  <tr><td>Server</td><td>NestJS 11 (Node.js 22+), zod validation, bcryptjs; it also serves the built browser app</td></tr>
+  <tr><td>Database</td><td>PostgreSQL (UTF-8) through Prisma 6. In single-PC mode (<span class="mono">EMBEDDED_PG=1</span>) the server starts its own PostgreSQL on port 5544.</td></tr>
+  <tr><td>Shared core</td><td><span class="mono">@pa/core</span>: money, TDS, BS calendar, amount in words, voucher rules. The same code runs in the browser and on the server, so the preview always equals what is saved.</td></tr>
+</table>
+<h3>Folder layout</h3>
+<div class="tree">C:\chetra 2
+├── start.bat · stop.bat · share.bat     double-click helpers (chapter 3)
+├── render.yaml                          one-click cloud deployment
+├── packages/core/src                    @pa/core — shared accounting core
+│   ├── money.ts      parse/format paisa, Nepali digit grouping (5,03,09,038.73), Devanagari digits
+│   ├── tax.ts        computeTds(): exact-fraction TDS with rounding modes
+│   ├── bsdate.ts     BS ⇄ AD conversion, today in Nepal time, fiscal-year helpers
+│   ├── words.ts      amount in words (Nepali / English)
+│   └── voucher.ts    line validation, payment/tax-deposit line builders, cash-book columns, PAN check
+├── apps/server
+│   ├── prisma/schema.prisma            database model (chapter 15)
+│   ├── prisma/migrations/              init · integrity guards · head activity & paid · income
+│   ├── prisma/seed.ts, seed-demo.ts    empty office / demo data
+│   ├── scripts/add-heads.ts            add new standard heads to an existing office
+│   ├── test/acceptance.e2e.test.ts     31 end-to-end tests with client figures
+│   └── src
+│       ├── main.ts, bootstrap.ts       start-up, .env, embedded DB watchdog, serve web app
+│       ├── auth/                       login, sessions, idle timeout, lockout, role guard
+│       ├── audit/audit.service.ts      hash-chained audit log
+│       ├── master/                     settings: org, years, locks, heads, sub-heads, payees, tax, budget, opening, users, audit
+│       ├── vouchers/vouchers.service.ts  compose + validate, submit, approve, reject, cancel, paid, tax deposit
+│       ├── vouchers/ledger.ts          balance/budget queries from approved lines
+│       ├── reports/reports.service.ts  cash book, budget statement, trend, income, fund summaries
+│       ├── common/                     errors, DB-down handling, zod helpers, BigInt→JSON
+│       └── seed/seed.ts                48 expense heads, 11 income heads, tax rules, 4 funds
+└── apps/web/src
+    ├── App.tsx                         routes (chapter 4)
+    ├── pages/  Home · VoucherEntry · Vouchers · Income · Reports · Admin
+    ├── components/  Form203 (exact paper form) · BsDateInput · PayeeForm · TrendChart · Layout · ui
+    ├── i18n/ne.ts, en.ts               every label and error message
+    └── lib/  api · session · prefs · types</div>
+
+<h3>How a request travels</h3>
+<div class="flow">
+  <div class="step"><b>Browser</b>React page calls <span class="mono">/api/…</span> with a bearer token</div><div class="arrow">→</div>
+  <div class="step"><b>Auth guard</b>Token → user; idle check; role check</div><div class="arrow">→</div>
+  <div class="step"><b>Controller</b>zod validates input; money parsed to paisa</div><div class="arrow">→</div>
+  <div class="step"><b>Service</b>Business rules inside one DB transaction + audit entry</div><div class="arrow">→</div>
+  <div class="step ok"><b>PostgreSQL</b>CHECK constraints and triggers as last defence</div>
+</div>
+<h3>Key design decisions</h3>
+<ul>
+  <li><b>Books are derived, not stored.</b> <span class="mono">ledger.ts</span> sums approved voucher lines on demand. Nothing can drift out of sync.</li>
+  <li><b>One compose() function</b> builds the lines for preview, create and update, so what is previewed is exactly what is saved.</li>
+  <li><b>Money is BIGINT paisa</b>, sent over JSON as exact decimal strings ("78050.00").</li>
+  <li><b>Approvals are serialised</b> with a PostgreSQL advisory lock per office, and the voucher counter row is locked (<span class="mono">FOR UPDATE</span>), which gives gap-free numbers even with many users.</li>
+  <li><b>Optimistic locking:</b> each voucher has a version number, and stale edits are refused.</li>
+  <li><b>BS dates</b> are stored both as text (<span class="mono">2082.04.01</span>) and as an AD date for sorting and ranges.</li>
+</ul>
+</section>
+
+<!-- ═════════════════════════════ 15 ═════════════════════════════ -->
+<section class="chapter">
+<h1>15. Database tables</h1>
+<table>
+  <tr><th>Table</th><th>Holds</th></tr>
+  <tr><td>Organization</td><td>Office details, signatories, VAT rate, TDS rounding, session timeout</td></tr>
+  <tr><td>User, Session</td><td>Logins, roles, lockout counters; active sessions (hashed tokens)</td></tr>
+  <tr><td>FiscalYear, PeriodLock</td><td>Fiscal years (BS and AD start/end, closed flag); locked months</td></tr>
+  <tr><td>Fund</td><td>The four funds (source × nature)</td></tr>
+  <tr><td>LedgerAccount</td><td>Chart of accounts. Kind = EXPENSE (with nature), REVENUE (with source), BANK, CASH, TDS_PAYABLE, ADVANCE, DEPOSIT, OTHER. Also holds code, activity no., folio no. and bank details.</td></tr>
+  <tr><td>BudgetSubHead</td><td>Budget sub-head numbers</td></tr>
+  <tr><td>BudgetEntry</td><td>One row per budget change (appropriation, addition, reduction, transfer pair)</td></tr>
+  <tr><td>OpeningBalance</td><td>Opening balance per fund and account</td></tr>
+  <tr><td>Payee</td><td>Payee register (PAN, VAT, bank)</td></tr>
+  <tr><td>TaxRule</td><td>TDS rate history with effective dates</td></tr>
+  <tr><td>VoucherCounter</td><td>Next voucher no. per fund and year</td></tr>
+  <tr><td>Voucher</td><td>Header: fund, year, number, type, mode (PAYMENT / MANUAL / TAX_DEPOSIT / RECEIPT), status, dates, narration, total, who prepared/submitted/approved/cancelled/paid and when, version</td></tr>
+  <tr><td>VoucherLine</td><td>Dr/Cr lines: account, kind, amount, activity, component, source columns</td></tr>
+  <tr><td>VoucherPayee</td><td>Payment table rows: payee, PAN, bank, bill, gross, TDS, net, link to the tax deposit voucher (for income: payer and receipt no.)</td></tr>
+  <tr><td>Attachment</td><td>Files attached to vouchers (bills, quotations)</td></tr>
+  <tr><td>AuditLog</td><td>Append-only, hash-chained history of every action</td></tr>
+</table>
+<p class="muted">Database-level guards: amounts &gt; 0; gross − TDS = net; an approved voucher must have a number; tax rate 0–100%; month 1–12; audit log immutable.</p>
+</section>
+
+<!-- ═════════════════════════════ 16 ═════════════════════════════ -->
+<section class="chapter">
+<h1>16. API reference</h1>
+<p>All paths start with <span class="mono">/api</span> and need <span class="mono">Authorization: Bearer &lt;token&gt;</span>, except login. Write actions are refused for the Auditor role.</p>
+<table>
+  <tr><th>Method and path</th><th>Purpose</th><th>Role</th></tr>
+  <tr><td class="mono">POST /auth/login · POST /auth/logout · GET /auth/me</td><td>Sign in / out, current user</td><td>all</td></tr>
+  <tr><td class="mono">PATCH /auth/me/language · /auth/me/password</td><td>Own language and password</td><td>all</td></tr>
+  <tr><td class="mono">GET /meta</td><td>Office, funds, years, today (BS), sub-heads, tax rules</td><td>all</td></tr>
+  <tr><td class="mono">PATCH /organization</td><td>Office settings</td><td>Admin</td></tr>
+  <tr><td class="mono">POST /fiscal-years · POST /fiscal-years/:id/close</td><td>New year / close year</td><td>Admin</td></tr>
+  <tr><td class="mono">GET, POST /fiscal-years/:id/locks</td><td>Month locks</td><td>Admin (GET all)</td></tr>
+  <tr><td class="mono">GET /accounts · POST /accounts · PATCH /accounts/:id</td><td>Chart of accounts (expense and income heads, bank…)</td><td>Admin (GET all)</td></tr>
+  <tr><td class="mono">POST /sub-heads · PATCH /sub-heads/:id</td><td>Budget sub-heads</td><td>Admin</td></tr>
+  <tr><td class="mono">GET, POST /payees · PATCH /payees/:id</td><td>Payee register</td><td>Admin, Accountant</td></tr>
+  <tr><td class="mono">GET, POST /tax-rules</td><td>TDS rates</td><td>Admin (GET all)</td></tr>
+  <tr><td class="mono">GET, POST /budget-entries</td><td>Budget rows</td><td>Admin (GET all)</td></tr>
+  <tr><td class="mono">GET, POST /opening-balances</td><td>Opening balance</td><td>Admin (GET all)</td></tr>
+  <tr><td class="mono">GET, POST /users · PATCH /users/:id</td><td>Users</td><td>Admin</td></tr>
+  <tr><td class="mono">GET /audit · GET /audit/verify · POST /audit/print</td><td>Audit log, tamper check, log a book print</td><td>Admin, Auditor</td></tr>
+  <tr><td class="mono">GET /funds/:fundId/vouchers</td><td>Voucher list (status, search, pages)</td><td>all</td></tr>
+  <tr><td class="mono">POST /funds/:fundId/vouchers/preview</td><td>Exact Form 203 preview</td><td>Admin, Accountant</td></tr>
+  <tr><td class="mono">POST /funds/:fundId/vouchers</td><td>Create draft (mode PAYMENT, MANUAL or RECEIPT)</td><td>Admin, Accountant</td></tr>
+  <tr><td class="mono">GET /funds/:fundId/budget-position</td><td>Budget, spent, pending, remaining per head</td><td>all</td></tr>
+  <tr><td class="mono">GET /funds/:fundId/tds/pending · POST /funds/:fundId/tax-deposit</td><td>Pending TDS; create tax deposit voucher</td><td>all / Admin, Accountant</td></tr>
+  <tr><td class="mono">POST /funds/:fundId/voucher-start-number</td><td>Starting voucher no. (once)</td><td>Admin</td></tr>
+  <tr><td class="mono">GET /vouchers/:id · PUT /vouchers/:id</td><td>Read / edit draft</td><td>all / Admin, Accountant</td></tr>
+  <tr><td class="mono">POST /vouchers/:id/submit · /cancel · /paid</td><td>Workflow</td><td>Admin, Accountant</td></tr>
+  <tr><td class="mono">POST /vouchers/:id/approve · /reject</td><td>Workflow</td><td>Admin</td></tr>
+  <tr><td class="mono">POST /vouchers/:id/printed</td><td>Record a print</td><td>all</td></tr>
+  <tr><td class="mono">GET /reports/cash-book/:fundId · GET /reports/cash-book</td><td>Cash book per fund / consolidated</td><td>all / Admin, Auditor</td></tr>
+  <tr><td class="mono">GET /reports/budget-statement/:fundId</td><td>Budget Statement</td><td>all</td></tr>
+  <tr><td class="mono">GET /reports/income/:source</td><td>Income by head + income vouchers</td><td>all</td></tr>
+  <tr><td class="mono">GET /reports/trend · GET /reports/fund-summaries</td><td>Chart data; dashboard cards</td><td>all</td></tr>
+</table>
+</section>
+
+<!-- ═════════════════════════════ 17 ═════════════════════════════ -->
+<section class="chapter">
+<h1>17. Testing</h1>
+<p>Run <span class="mono">npm test</span> from the project folder. Each run creates a fresh database, so tests never touch real data.</p>
+<table>
+  <tr><th>Suite</th><th>Count</th><th>Covers</th></tr>
+  <tr><td>Core unit tests</td><td class="num">21</td><td>Money parsing and formatting, TDS rounding, BS calendar, amount in words, voucher rules</td></tr>
+  <tr><td>Client figures (§12)</td><td class="num">12</td><td>Opening balance, V160–V183 TDS and net, running bank balances, budget savings, charts equal books, cash book reconciles to the paisa</td></tr>
+  <tr><td>No-mistake rules (§8)</td><td class="num">10</td><td>Dr ≠ Cr, overspend + override, bank overdraft, head type, dates, locked month, duplicates, VAT/TDS reasons, PAN, date order</td></tr>
+  <tr><td>Roles and audit (§3)</td><td class="num">7</td><td>Auditor read-only, accountant limits, approved is final, lockout, immutable log and intact chain, sub-heads, reject flow</td></tr>
+  <tr><td>Income</td><td class="num">2</td><td>Dr bank / Cr income, source mismatch blocked, pending/received totals, bank rises, not counted as expense; only Admin adds income heads</td></tr>
+</table>
+<p class="ok">Last run: <b>all 31 server tests and 21 core tests passed.</b></p>
+</section>
+
+<!-- ═════════════════════════════ 18 ═════════════════════════════ -->
+<section class="chapter">
+<h1>18. Troubleshooting</h1>
+<table>
+  <tr><th>Problem</th><th>Fix</th></tr>
+  <tr><td>"This site can't be reached" at localhost:3000</td><td>Double-click start.bat and wait for the browser to open.</td></tr>
+  <tr><td>"Database is not running" on login</td><td>Run stop.bat, then start.bat.</td></tr>
+  <tr><td>Public link does not open</td><td>The PC slept or share.bat was closed. Run start.bat, then share.bat, and send the <b>new</b> link.</td></tr>
+  <tr><td>"Account locked"</td><td>5 wrong passwords. Wait 30 minutes, or the Super Admin unlocks it in Settings → Users.</td></tr>
+  <tr><td>Logged out by itself</td><td>30 minutes without activity (session timeout). Log in again.</td></tr>
+  <tr><td>Cannot approve: date order</td><td>A later-dated voucher of this fund is already approved. Correct the date, or approve vouchers in date order.</td></tr>
+  <tr><td>Cannot approve: budget</td><td>Add budget (additional budget / transfer), or approve as Super Admin with a written reason.</td></tr>
+  <tr><td>Cannot approve: insufficient balance</td><td>The shared bank does not have enough money. Record the income or grant first.</td></tr>
+  <tr><td>Cannot enter a date</td><td>The month is locked, or the date is outside the fiscal year.</td></tr>
+  <tr><td>A head is missing from the list</td><td>It belongs to the other type (capital/recurrent, internal/grant) or is inactive. Check Settings → Accounts / heads.</td></tr>
+</table>
+</section>
+
+<!-- ═════════════════════════════ 19 ═════════════════════════════ -->
+<section class="chapter">
+<h1>19. What is still to be built, and what must be verified</h1>
+<h3>Done</h3>
+<p>Schema, roles, login, audit trail · four-fund navigation · Form 203 entry with TDS engine and approval workflow · bank-cash book, budget statement and printing · tax deposit · dashboards and charts · bilingual interface · income (Income) · all acceptance tests.</p>
+<h3>Next phases</h3>
+<table>
+  <tr><th>Feature</th><th>What it adds</th></tr>
+  <tr><td>Backup / restore</td><td>One-click backup of all data to a file and restore. <b>Recommended before go-live.</b></td></tr>
+  <tr><td>Advance</td><td>Giving and settling advances; advance register with ageing</td></tr>
+  <tr><td>Budget Ledger (Budget ledger)</td><td>Page for each head with every voucher and its running balance</td></tr>
+  <tr><td>TDS register and IRD monthly report</td><td>Tax withheld per payee and PAN, ready for filing</td></tr>
+  <tr><td>Excel export</td><td>Cash book, Budget Statement and income report as .xlsx</td></tr>
+  <tr><td>Bank reconciliation, trial balance, other reports</td><td>Month-end checks</td></tr>
+  <tr><td>Licensing</td><td>Licence key per installation</td></tr>
+</table>
+<h3>Must be verified before go-live</h3>
+<div class="warn">
+<ol style="margin:0">
+  <li><b>Expense-head codes and activity no.</b> (48 heads) against the office's approved budget book.</li>
+  <li><b>Income-head revenue codes</b> (11 heads) against the office books.</li>
+  <li><b>All TDS rates</b>, by a Chartered Accountant against the current Finance Act.</li>
+  <li><b>Client book findings:</b> the TDS on paper vouchers V165 (8,884) and V185 (456) matches no standard rate. The Budget Statement shows less spending than the cash book for consultancy, festivals, service contracts, meeting allowance and furniture. Capital heads appear in the Recurrent statement. The paper books shared are FY 2081/82.</li>
+  <li><b>Replace all demo passwords</b> and deactivate the demo users.</li>
+</ol>
+</div>
+<p class="muted" style="margin-top:14pt">End of guide.</p>
+</section>
+
+</body>
+</html>
