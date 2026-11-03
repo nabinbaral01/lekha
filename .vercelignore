@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+**/dist
+.pgdata
+**/.pgdata
+.pgtest
+**/.env
+**/.env.*
+*.log
+backups
+uploads
+coverage
+tunnel.log
+docs

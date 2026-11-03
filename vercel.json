@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci",
+  "buildCommand": "node scripts/vercel-build.js",
+  "outputDirectory": "apps/web/dist",
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30,
+      "includeFiles": "{node_modules/.prisma/client/**,apps/server/dist/**,packages/core/dist/**}",
+      "excludeFiles": "{node_modules/embedded-postgres/**,node_modules/@embedded-postgres/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "regions": ["sin1"]
+}
